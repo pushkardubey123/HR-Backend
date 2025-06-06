@@ -8,7 +8,13 @@ const leaveRouter=require('./Router/LeaveRouter')
 
 dotenv.config()
 const app= express()
-app.use(cors())
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://your-frontend-domain.com'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 dbConnect()
 app.use(express.json())
 app.use(fileupload())
