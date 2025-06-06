@@ -1,48 +1,39 @@
 const attendanceTbl = require("../Modals/Attendence");
 const { getDistance } = require("geolib");
-const User = require("../Modals/User");
 
 const officeLocation = {
   latitude: 26.889,
   longitude: 80.991,
 };
 
+const getCurrentTime = () => {
+  const now = new Date();
+  const hh = now.getHours().toString().padStart(2, "0");
+  const mm = now.getMinutes().toString().padStart(2, "0");
+  return `${hh}:${mm}`;
+};
+
 const markAttendance = async (req, res) => {
   try {
     const { employeeId, latitude, longitude, inTime } = req.body;
-
     if (!employeeId || !latitude || !longitude || !inTime) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing required fields",
-      });
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
     const distance = getDistance({ latitude, longitude }, officeLocation);
-    
     if (distance > 200) {
-      return res.status(403).json({
-        success: false,
-        message: "You are outside the allowed office location",
-        distance,
-      });
+      return res.status(403).json({ success: false, message: "You are outside the allowed office location", distance });
     }
 
     const today = new Date().toDateString();
 
     const alreadyMarked = await attendanceTbl.findOne({
       employeeId,
-      date: {
-        $gte: new Date(today),
-        $lt: new Date(new Date(today).getTime() + 86400000),
-      },
+      date: { $gte: new Date(today), $lt: new Date(new Date(today).getTime() + 86400000) },
     });
 
     if (alreadyMarked) {
-      return res.status(400).json({
-        success: false,
-        message: "Attendance already marked for today",
-      });
+      return res.status(400).json({ success: false, message: "Attendance already marked for today" });
     }
 
     const hour = parseInt(inTime.split(":")[0]);
@@ -56,21 +47,75 @@ const markAttendance = async (req, res) => {
       location: { latitude, longitude },
       status,
       statusType: "Auto",
+      inOutLogs: [{ inTime, outTime: null }],
     });
 
     const result = await attendance.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Attendance marked successfully",
-      data: result,
-    });
+    res.status(201).json({ success: true, message: "Attendance marked successfully", data: result });
   } catch (err) {
     console.error("Mark Attendance Error:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const markSession = async (req, res) => {
+  try {
+    const { employeeId, latitude, longitude, actionType } = req.body;
+
+    if (!employeeId || !latitude || !longitude || !actionType) {
+      return res.status(400).json({ success: false, message: "Missing fields" });
+    }
+
+    const distance = getDistance({ latitude, longitude }, officeLocation);
+    if (distance > 200) {
+      return res.status(403).json({ success: false, message: "You are outside the allowed office location", distance });
+    }
+
+    const today = new Date().toDateString();
+
+    let attendance = await attendanceTbl.findOne({
+      employeeId,
+      date: { $gte: new Date(today), $lt: new Date(new Date(today).getTime() + 86400000) },
     });
+
+    if (!attendance && actionType === "in") {
+      attendance = new attendanceTbl({
+        employeeId,
+        date: new Date(),
+        inTime: getCurrentTime(),
+        location: { latitude, longitude },
+        status: "Present",
+        statusType: "Auto",
+        inOutLogs: [{ inTime: getCurrentTime(), outTime: null }],
+      });
+    }
+
+    else if (attendance) {
+      if (actionType === "in") {
+        const last = attendance.inOutLogs[attendance.inOutLogs.length - 1];
+        if (!last || last.outTime) {
+          attendance.inOutLogs.push({ inTime: getCurrentTime(), outTime: null });
+        } else {
+          return res.status(400).json({ success: false, message: "Already checked in" });
+        }
+      } else if (actionType === "out") {
+        const last = attendance.inOutLogs[attendance.inOutLogs.length - 1];
+        if (last && !last.outTime) {
+          last.outTime = getCurrentTime();
+        } else {
+          return res.status(400).json({ success: false, message: "Already checked out or no session started" });
+        }
+      }
+    } else {
+      return res.status(400).json({ success: false, message: "No attendance record for today" });
+    }
+
+    const saved = await attendance.save();
+    res.status(200).json({ success: true, message: "Session updated", data: saved });
+
+  } catch (err) {
+    console.error("Session Error:", err.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
@@ -79,43 +124,23 @@ const getAllAttendance = async (req, res) => {
     const data = await attendanceTbl
       .find()
       .populate("employeeId", "name email role")
-      .sort({ date: -1 });  
+      .sort({ date: -1 });
 
-    res.status(200).json({
-      success: true,
-      message: "All attendance fetched successfully",
-      code: 200,
-      data,
-    });
-  } catch (error) {
-    console.error("Get All Attendance Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      code: 500,
-    });
+    res.status(200).json({ success: true, message: "All attendance fetched", code: 200, data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Internal Server Error", code: 500 });
   }
 };
+
 
 const getAttendanceByEmployee = async (req, res) => {
   try {
     const employeeId = req.params.id;
-
     const data = await attendanceTbl.find({ employeeId }).sort({ date: -1 });
 
-    res.status(200).json({
-      success: true,
-      message: "Employee attendance fetched",
-      code: 200,
-      data,
-    });
-  } catch (error) {
-    console.error("Get Employee Attendance Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      code: 500,
-    });
+    res.status(200).json({ success: true, message: "Attendance fetched", code: 200, data });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Internal Server Error", code: 500 });
   }
 };
 
@@ -130,25 +155,12 @@ const updateAttendance = async (req, res) => {
     );
 
     if (!updated) {
-      return res.status(404).json({
-        success: false,
-        message: "Attendance not found",
-      });
+      return res.status(404).json({ success: false, message: "Attendance not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Attendance updated",
-      code: 200,
-      data: updated,
-    });
-  } catch (error) {
-    console.error("Update Attendance Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      code: 500,
-    });
+    res.status(200).json({ success: true, message: "Attendance updated", code: 200, data: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Internal Server Error", code: 500 });
   }
 };
 
@@ -157,29 +169,18 @@ const deleteAttendance = async (req, res) => {
     const deleted = await attendanceTbl.findByIdAndDelete(req.params.id);
 
     if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        message: "Attendance not found",
-      });
+      return res.status(404).json({ success: false, message: "Attendance not found" });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Attendance deleted",
-      code: 200,
-    });
-  } catch (error) {
-    console.error("Delete Attendance Error:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Internal Server Error",
-      code: 500,
-    });
+    res.status(200).json({ success: true, message: "Attendance deleted", code: 200 });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Internal Server Error", code: 500 });
   }
 };
 
 module.exports = {
   markAttendance,
+  markSession, 
   getAllAttendance,
   getAttendanceByEmployee,
   updateAttendance,

@@ -11,11 +11,11 @@ const attendanceSchema = new mongoose.Schema({
     required: true,
   },
   inTime: {
-    type: String, // Example: "09:25 AM"
+    type: String,
     required: true,
   },
   outTime: {
-    type: String, // Optional: "06:00 PM"
+    type: String,
   },
   status: {
     type: String,
@@ -31,9 +31,15 @@ const attendanceSchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number,
   },
+
+  inOutLogs: [
+    {
+      inTime: String,
+      outTime: String, 
+    },
+  ],
+
 }, { timestamps: true });
 
 const attendanceTbl = mongoose.model("Attendance", attendanceSchema);
-
 module.exports = attendanceTbl;
-    
