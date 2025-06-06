@@ -1,27 +1,22 @@
 const express = require("express");
 const router = express.Router();
+const auth = require("../Middleware/auth");
+
 const {
   markAttendance,
+  markSession, 
   getAllAttendance,
   getAttendanceByEmployee,
   updateAttendance,
-  deleteAttendance
+  deleteAttendance,
 } = require("../Controllers/AttendenceController");
 
-const auth = require("../Middleware/auth"); // अगर token-based auth है
 
-// 👨‍💼 Employee Attendance Mark (GPS-based)
 router.post("/mark", auth, markAttendance);
-
-// 📊 Admin: Get all attendance
+router.post("/session", auth, markSession); 
 router.get("/", auth, getAllAttendance);
-
-// 👤 Get attendance by employeeId
 router.get("/employee/:id", auth, getAttendanceByEmployee);
-
-
 router.put("/:id", auth, updateAttendance);
-
 router.delete("/:id", auth, deleteAttendance);
 
 module.exports = router;
