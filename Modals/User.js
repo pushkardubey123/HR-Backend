@@ -11,7 +11,7 @@ const UserSchema = new mongoose.Schema({
   address: String,
   departmentId: { type: mongoose.Schema.Types.ObjectId, ref: "Department" },
   designationId: { type: mongoose.Schema.Types.ObjectId, ref: "Designation" },
-  shiftId: {type: mongoose.Schema.Types.ObjectId, ref: "Shift" },
+  shiftId: { type: mongoose.Schema.Types.ObjectId, ref: "Shift" },
   doj: Date,
   status: { type: String, enum: ["active", "inactive", "resigned"], default: "active" },
   documents: [String],
@@ -24,5 +24,4 @@ const UserSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const userTbl = mongoose.model("User", UserSchema);
-
-module.exports=userTbl
+module.exports = userTbl;
