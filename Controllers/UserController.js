@@ -169,7 +169,13 @@ const getAllUsers = async (req, res) => {
   }
 
   try {
-    const users = await userTbl.find({ role: "employee" }).select("-passwordHash");
+    const users = await userTbl
+      .find({ role: "employee" })
+      .select("-passwordHash")
+      .populate("departmentId", "name")
+      .populate("designationId", "name")
+      .populate("shiftId", "name");
+
     res.json({
       success: true,
       error: false,
@@ -187,7 +193,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// 🔹 GET SINGLE USER BY ID
+
 const getUserById = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({
@@ -199,7 +205,13 @@ const getUserById = async (req, res) => {
   }
 
   try {
-    const user = await userTbl.findById(req.params.id).select("-passwordHash");
+    const user = await userTbl
+      .findById(req.params.id)
+      .select("-passwordHash")
+      .populate("departmentId", "name")
+      .populate("designationId", "name")
+      .populate("shiftId", "name");
+
     if (!user) {
       return res.json({
         success: false,
@@ -226,7 +238,7 @@ const getUserById = async (req, res) => {
   }
 };
 
-// 🔹 UPDATE USER
+
 const updateUser = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({
@@ -265,7 +277,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// 🔹 DELETE USER
 const deleteUser = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({
