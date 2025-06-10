@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const userTbl = require("../Modals/User");
+const sendOTP = require("../utils/sendOtp");
 
 // 🔹 Register Employee (by Admin)
 const register = async (req, res) => {
@@ -69,7 +70,52 @@ const login = async (req, res) => {
   }
 };
 
-// 🔹 Get All Employees with Populated References
+const userForgetPassword =async (req, res) => {
+  const { email } = req.body;
+  
+  const user = await userTbl.findOne({ email });
+  if (!user) {
+    return res.status(404).json({ success: false, message: "Email is not Exist" });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
+  user.otp = otp;
+  user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+  await user.save();
+
+  await sendOTP(email, otp);
+
+  res.json({ success: true, message: "OTP sending successfully !" });
+};
+
+const userVerifyPassword=async (req, res) => {
+  const { email, otp } = req.body;
+
+  const user = await userTbl.findOne({ email });
+
+  if (!user || user.otp !== otp || user.otpExpires < new Date()) {
+    return res.status(400).json({ success: false, message: "OTP is wrong or OTP is expired !" });
+  }
+
+  res.json({ success: true, message: "OTP is right,Enter New Passsword" });
+}
+
+const userResetPassword=async (req, res) => {
+  const { email, newPassword, otp } = req.body;
+
+  const user = await userTbl.findOne({ email });
+
+  if (!user || user.otp !== otp || user.otpExpires < new Date()) {
+    return res.status(400).json({ success: false, message: "OTP is wrong or expired !" });
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, 10); 
+  user.otp = undefined;    
+  user.otpExpires = undefined;
+  await user.save();
+
+  res.json({ success: true, message: "Password changed !" });
+}
 const getAllUsers = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({ success: false, error: true, message: "Access denied", code: 403 });
@@ -86,7 +132,7 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// 🔹 Get Single Employee
+
 const getUserById = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({ success: false, error: true, message: "Access denied", code: 403 });
@@ -141,4 +187,7 @@ module.exports = {
   getUserById,
   updateUser,
   deleteUser,
+  userForgetPassword,
+  userResetPassword,
+  userVerifyPassword
 };

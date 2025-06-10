@@ -2,7 +2,10 @@ const express = require("express");
 const router = express.Router();
 const {
   register, login, getAllUsers,
-  getUserById, updateUser, deleteUser
+  getUserById, updateUser, deleteUser,
+  userForgetPassword,
+  userVerifyPassword,
+  userResetPassword
 } = require("../Controllers/UserController");
 const auth = require("../Middleware/auth");
 
@@ -12,5 +15,8 @@ router.get("/user", auth, getAllUsers);
 router.get("/employeeget/:id", auth, getUserById);
 router.put("/employeeget/:id", auth, updateUser);
 router.delete("/employeedelete/:id", auth, deleteUser);
+router.post("/user/forgot-password",userForgetPassword);
+router.post("/user/verify-otp",userVerifyPassword)
+router.post("/user/reset-password",userResetPassword)
 
 module.exports = router;
