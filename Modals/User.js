@@ -25,9 +25,9 @@ const UserSchema = new mongoose.Schema(
       name: String,
       phone: String,
       relation: String,
-      otp: String,
-      otpExpires: Date,
     },
+    otp: String,
+    otpExpires: Date,
   },
   { timestamps: true }
 );
