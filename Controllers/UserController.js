@@ -3,21 +3,17 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const userTbl = require("../Modals/User");
 const sendOTP = require("../utils/sendOtp");
+const pendingTbl = require("../Modals/PendingUser");
 
-// 🔹 Register Employee (by Admin)
+const pendingTbl = require("../Modals/PendingUser"); // new model
+
 const register = async (req, res) => {
   try {
-    const {
-      name, email, password, role, phone, gender, dob, address,
-      departmentId, designationId, shiftId, doj, emergencyContact
-    } = req.body;
+    const { name, email, password, phone, gender, dob, address, departmentId, designationId, shiftId, doj, emergencyContact } = req.body;
 
-    if (await userTbl.findOne({ email })) {
+    const emailExists = await pendingTbl.findOne({ email }) || await userTbl.findOne({ email });
+    if (emailExists) {
       return res.json({ success: false, error: true, message: "Email already exists", code: 400 });
-    }
-
-    if (await userTbl.findOne({ phone })) {
-      return res.json({ success: false, error: true, message: "Phone already exists", code: 400 });
     }
 
     let profilePic = null;
@@ -29,23 +25,58 @@ const register = async (req, res) => {
       profilePic = filename;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = new userTbl({
-      name, email, role, phone, gender, dob, address, departmentId,
-      designationId, shiftId, doj, emergencyContact: JSON.parse(emergencyContact),
-      passwordHash: hashedPassword, profilePic
+    const pendingUser = new pendingTbl({
+      name, email, password, phone, gender, dob, address,
+      departmentId, designationId, shiftId, doj,
+      emergencyContact: JSON.parse(emergencyContact),
+      profilePic
     });
 
-    const result = await user.save();
-    res.json({ success: true, error: false, message: "Registered successfully", code: 201, result });
+    await pendingUser.save();
+    res.json({
+      success: true,
+      message: "Registration pending admin approval",
+      code: 201
+    });
   } catch (err) {
-    console.error("Register error:", err.message);
-    res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
+    console.error("Register Error:", err.message);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-// 🔹 Login
+const getPendingUsers = async (req, res) => {
+  try {
+    const pendingUsers = await pendingTbl.find();
+    res.json({ success: true, data: pendingUsers });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to fetch pending users" });
+  }
+};
+
+const approvePendingUser = async (req, res) => {
+  try {
+    const pendingUser = await pendingTbl.findById(req.params.id);
+    if (!pendingUser) {
+      return res.status(404).json({ success: false, message: "Pending user not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(pendingUser.password, 10);
+
+    const user = new userTbl({
+      ...pendingUser.toObject(),
+      passwordHash: hashedPassword,
+      role: "employee"
+    });
+
+    await user.save();
+    await pendingTbl.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: "User approved and moved to main DB" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error approving user" });
+  }
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -189,5 +220,7 @@ module.exports = {
   deleteUser,
   userForgetPassword,
   userResetPassword,
-  userVerifyPassword
+  userVerifyPassword,
+  getPendingUsers,
+  approvePendingUser
 };

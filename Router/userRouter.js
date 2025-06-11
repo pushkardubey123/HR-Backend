@@ -5,7 +5,9 @@ const {
   getUserById, updateUser, deleteUser,
   userForgetPassword,
   userVerifyPassword,
-  userResetPassword
+  userResetPassword,
+  getPendingUsers,
+  approvePendingUser
 } = require("../Controllers/UserController");
 const auth = require("../Middleware/auth");
 
@@ -18,5 +20,7 @@ router.delete("/employeedelete/:id", auth, deleteUser);
 router.post("/user/forgot-password",userForgetPassword);
 router.post("/user/verify-otp",userVerifyPassword)
 router.post("/user/reset-password",userResetPassword)
+router.get("/pending-users", auth, getPendingUsers);
+router.post("/approve-user/:id", auth, approvePendingUser);
 
 module.exports = router;
