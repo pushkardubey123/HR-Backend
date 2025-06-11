@@ -5,8 +5,6 @@ const userTbl = require("../Modals/User");
 const sendOTP = require("../utils/sendOtp");
 const pendingTbl = require("../Modals/PendingUser");
 
-const pendingTbl = require("../Modals/PendingUser"); // new model
-
 const register = async (req, res) => {
   try {
     const { name, email, password, phone, gender, dob, address, departmentId, designationId, shiftId, doj, emergencyContact } = req.body;
