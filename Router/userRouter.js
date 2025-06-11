@@ -20,7 +20,7 @@ router.delete("/employeedelete/:id", auth, deleteUser);
 router.post("/user/forgot-password",userForgetPassword);
 router.post("/user/verify-otp",userVerifyPassword)
 router.post("/user/reset-password",userResetPassword)
-router.get("/pending-users", auth, getPendingUsers);
-router.post("/approve-user/:id", auth, approvePendingUser);
+router.get("user/pending-users", auth, getPendingUsers);
+router.post("user/approve-user/:_id", auth, approvePendingUser);
 
 module.exports = router;
