@@ -7,7 +7,8 @@ const {
   userVerifyPassword,
   userResetPassword,
   getPendingUsers,
-  approvePendingUser
+  approvePendingUser,
+  rejectPendingUser
 } = require("../Controllers/UserController");
 const auth = require("../Middleware/auth");
 
@@ -22,5 +23,6 @@ router.post("/user/verify-otp",userVerifyPassword)
 router.post("/user/reset-password",userResetPassword)
 router.get("/user/pending-users", auth, getPendingUsers);
 router.post("/user/approve-user/:id", auth, approvePendingUser);
+router.delete("/pending/reject/:id",auth,rejectPendingUser)
 
 module.exports = router;
