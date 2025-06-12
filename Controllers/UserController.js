@@ -44,10 +44,26 @@ const register = async (req, res) => {
 
 const getPendingUsers = async (req, res) => {
   try {
-    const pendingUsers = await pendingTbl.find();
-    res.json({ success: true, data: pendingUsers });
+    const users = await pendingTbl.find()
+      .populate("departmentId", "name")
+      .populate("designationId", "name")
+      .populate("shiftId", "name");
+
+    res.json({
+      success: true,
+      error: false,
+      message: "Pending users fetched",
+      code: 200,
+      data: users,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to fetch pending users" });
+    console.error("Get Pending Users Error:", err.message);
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+      code: 500,
+    });
   }
 };
 
