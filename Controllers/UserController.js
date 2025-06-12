@@ -94,7 +94,7 @@ const approvePendingUser = async (req, res) => {
 const rejectPendingUser=async (req, res) => {
   try {
     const { id } = req.params;
-    await pendingUserTbl.findByIdAndDelete(id);
+    await pendingTbl.findByIdAndDelete(id);
     res.json({ success: true, message: "User request rejected" });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to reject user" });
