@@ -44,16 +44,15 @@ const register = async (req, res) => {
 
 const getPendingUsers = async (req, res) => {
   try {
-    const users = await pendingTbl
-      .find()
-      .populate("departmentId", "name")   // ✅ Only 'name' field
+    const users = await pendingTbl.find()
+      .populate("departmentId", "name")
       .populate("designationId", "name")
       .populate("shiftId", "name");
 
-    res.status(200).json({
+    res.json({
       success: true,
       error: false,
-      message: "Pending users fetched successfully",
+      message: "Pending users fetched",
       code: 200,
       data: users,
     });

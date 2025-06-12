@@ -8,9 +8,9 @@ const PendingUserSchema = new mongoose.Schema({
   gender: String,
   dob: Date,
   address: String,
-  departmentId: mongoose.Schema.Types.ObjectId,
-  designationId: mongoose.Schema.Types.ObjectId,
-  shiftId: mongoose.Schema.Types.ObjectId,
+  departmentId: {type:mongoose.Schema.Types.ObjectId,ref: "Department"},
+  designationId: {type:mongoose.Schema.Types.ObjectId,ref: "Designation"},
+  shiftId: {type:mongoose.Schema.Types.ObjectId,ref: "Shift"},
   doj: Date,
   emergencyContact: {
     name: String,
