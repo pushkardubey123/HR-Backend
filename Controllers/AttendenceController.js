@@ -121,16 +121,31 @@ const markSession = async (req, res) => {
 
 const getAllAttendance = async (req, res) => {
   try {
-    const data = await attendanceTbl
+    const all = await attendanceTbl
       .find()
-      .populate("employeeId", "name email role")
+      .populate("employeeId", "name email")
       .sort({ date: -1 });
 
-    res.status(200).json({ success: true, message: "All attendance fetched", code: 200, data });
+    const grouped = {};
+
+    all.forEach((record) => {
+      const dateKey = new Date(record.date).toDateString();
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(record);
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Grouped attendance fetched",
+      data: grouped,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Internal Server Error", code: 500 });
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 
 const getAttendanceByEmployee = async (req, res) => {
