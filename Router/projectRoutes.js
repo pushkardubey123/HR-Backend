@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../Middleware/auth")
+const verifyToken= require("../Middleware/auth")
 const projectController = require("../Controllers/projectController");
-const verifyToken=
 
 // ✅ Project CRUD (Admin Only)
-router.post("/", verifyToken, projectController.createProject);
+router.post("/projects", verifyToken, projectController.createProject);;
 router.get("/", verifyToken, projectController.getAllProjects);
 router.get("/:id", verifyToken, projectController.getProjectById);
 router.put("/:id", verifyToken, projectController.updateProject);
