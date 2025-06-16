@@ -97,6 +97,8 @@ exports.deleteProject = async (req, res) => {
   }
 };
 
+// controllers/projectController.js
+
 exports.deleteTaskFromProject = async (req, res) => {
   try {
     const { projectId, taskId } = req.params;
