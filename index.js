@@ -23,6 +23,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/departments", require("./Router/departmentRouter"));
 app.use("/api/designations", require("./Router/designationRouter"));
 app.use("/api/shifts", require("./Router/ShiftRouter"));
+app.use("/api/projects", require("./Router/projectRoutes"));
 app.use("/api/leaves", leaveRouter);
 app.use("/api/attendance", require("./Router/AttendenceRouter"));
 app.use("/api/payrolls", require("./Router/PayrollsRouter"));
