@@ -97,43 +97,40 @@ exports.deleteProject = async (req, res) => {
   }
 };
 
-// controllers/projectController.js
-
 exports.deleteTaskFromProject = async (req, res) => {
   try {
     const { projectId, taskId } = req.params;
 
-    // 1. Find the project
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
-    // 2. Find task inside tasks array
-    const task = project.tasks.id(taskId);
-    if (!task) {
+    // ✅ Find index of task
+    const taskIndex = project.tasks.findIndex(task => task._id.toString() === taskId);
+    if (taskIndex === -1) {
       return res.status(404).json({ success: false, message: "Task not found in this project" });
     }
 
-    // 3. Remove the task
-    task.remove(); // Mongoose subdocument method
+    // ✅ Remove using splice
+    project.tasks.splice(taskIndex, 1);
 
-    // 4. Save the updated project
     await project.save();
 
     res.json({
       success: true,
-      message: "Task deleted successfully",
+      message: "Task deleted successfully"
     });
 
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error deleting task",
-      error: error.message,
+      error: error.message
     });
   }
 };
+
 
 
 // 1. Update Task Status
