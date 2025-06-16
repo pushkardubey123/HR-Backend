@@ -22,12 +22,14 @@ exports.getAllProjects = async (req, res) => {
 
 // Add a new task to a project
 exports.addTaskToProject = async (req, res) => {
-  const { projectId } = req.params;
+  const { id } = req.params;
   const { title, description, assignedTo, dueDate } = req.body;
 
   try {
-    const project = await Project.findById(projectId);
-    if (!project) return res.status(404).json({ success: false, message: "Project not found" });
+    const project = await Project.findById(id); // ✅ Correct param: "id"
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
 
     const newTask = {
       title,
@@ -44,13 +46,18 @@ exports.addTaskToProject = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Task added to project",
-      data: project.tasks[project.tasks.length - 1] // latest added
+      message: "Task added successfully",
+      data: project.tasks[project.tasks.length - 1]
     });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Error adding task", error: err.message });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error adding task",
+      error: error.message
+    });
   }
 };
+
 
 
 // Get Single Project
