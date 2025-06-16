@@ -20,6 +20,39 @@ exports.getAllProjects = async (req, res) => {
   }
 };
 
+// Add a new task to a project
+exports.addTaskToProject = async (req, res) => {
+  const { projectId } = req.params;
+  const { title, description, assignedTo, dueDate } = req.body;
+
+  try {
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ success: false, message: "Project not found" });
+
+    const newTask = {
+      title,
+      description,
+      assignedTo,
+      dueDate,
+      status: "pending",
+      comments: [],
+      timeLogs: []
+    };
+
+    project.tasks.push(newTask);
+    await project.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Task added to project",
+      data: project.tasks[project.tasks.length - 1] // latest added
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error adding task", error: err.message });
+  }
+};
+
+
 // Get Single Project
 exports.getProjectById = async (req, res) => {
   try {

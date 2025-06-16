@@ -4,7 +4,8 @@ const verifyToken= require("../Middleware/auth")
 const projectController = require("../Controllers/projectController");
 
 // ✅ Project CRUD (Admin Only)
-router.post("/projects", verifyToken, projectController.createProject);;
+router.post("/projects", verifyToken, projectController.createProject);
+router.post("/:id/tasks", verifyToken, projectController.addTaskToProject);
 router.get("/", verifyToken, projectController.getAllProjects);
 router.get("/:id", verifyToken, projectController.getProjectById);
 router.put("/:id", verifyToken, projectController.updateProject);
