@@ -10,7 +10,7 @@ router.get("/", verifyToken, projectController.getAllProjects);
 router.get("/:id", verifyToken, projectController.getProjectById);
 router.put("/:id", verifyToken, projectController.updateProject);
 router.delete("/:id", verifyToken, projectController.deleteProject);
-router.delete("/:projectId/tasks/:taskId", verifyToken, projectController.deleteTaskFromProject);
+router.delete("/:id/tasks/:taskId", verifyToken, projectController.deleteTaskFromProject);
 
 
 // ✅ Task operations (Employee/Admin as per role-based check)
