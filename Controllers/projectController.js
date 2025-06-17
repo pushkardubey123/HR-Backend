@@ -13,7 +13,7 @@ exports.createProject = async (req, res) => {
 // Get All Projects
 exports.getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find().populate("assignedEmployees", "name email");
+    const projects = await Project.find().populate("tasks.comments.commentedBy","assignedEmployees", "name email");
     res.json({ success: true, data: projects });
   } catch (err) {
     res.status(500).json({ success: false, message: "Error fetching projects", error: err.message });
