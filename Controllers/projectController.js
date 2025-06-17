@@ -13,12 +13,18 @@ exports.createProject = async (req, res) => {
 // Get All Projects
 exports.getAllProjects = async (req, res) => {
   try {
-    const projects = await Project.find().populate("tasks.comments.commentedBy","assignedEmployees", "name email");
+    const projects = await Project.find()
+      .populate("assignedEmployees", "name email")
+      .populate("tasks.assignedTo", "name email")
+      .populate("tasks.comments.commentedBy", "name")
+      .populate("tasks.timeLogs.employeeId", "name");
+
     res.json({ success: true, data: projects });
   } catch (err) {
     res.status(500).json({ success: false, message: "Error fetching projects", error: err.message });
   }
 };
+
 
 // Add a new task to a project
 exports.addTaskToProject = async (req, res) => {
