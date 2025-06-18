@@ -27,36 +27,39 @@ exports.getAllProjects = async (req, res) => {
 
 
 // Add a new task to a project
-exports.addCommentToTask = async (req, res) => {
-  const { projectId, taskId } = req.params;
-  const { commentText, commentedBy } = req.body;
+exports.addTaskToProject = async (req, res) => {
+  const { id } = req.params;
+  const { title, description, assignedTo, dueDate } = req.body;
 
   try {
-    const project = await Project.findById(projectId);
-    if (!project) return res.status(404).json({ success: false, message: "Project not found" });
+    const project = await Project.findById(id); // ✅ Correct param: "id"
+    if (!project) {
+      return res.status(404).json({ success: false, message: "Project not found" });
+    }
 
-    const task = project.tasks.id(taskId);
-    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    const newTask = {
+      title,
+      description,
+      assignedTo,
+      dueDate,
+      status: "pending",
+      comments: [],
+      timeLogs: []
+    };
 
-    task.comments.push({ commentText, commentedBy, commentedAt: new Date() });
+    project.tasks.push(newTask);
     await project.save();
 
-    // ✅ Re-fetch with populated commentedBy
-    const updated = await Project.findById(projectId)
-      .populate("tasks.comments.commentedBy", "name");
-
-    const updatedTask = updated.tasks.id(taskId);
-
-    res.json({
+    res.status(201).json({
       success: true,
-      message: "Comment added",
-      data: updatedTask.comments,
+      message: "Task added successfully",
+      data: project.tasks[project.tasks.length - 1]
     });
-  } catch (err) {
+  } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error adding comment",
-      error: err.message,
+      message: "Error adding task",
+      error: error.message
     });
   }
 };
@@ -173,11 +176,26 @@ exports.addCommentToTask = async (req, res) => {
     task.comments.push({ commentText, commentedBy, commentedAt: new Date() });
     await project.save();
 
-    res.json({ success: true, message: "Comment added", data: task.comments });
+    // ✅ Re-fetch with populated commentedBy
+    const updated = await Project.findById(projectId)
+      .populate("tasks.comments.commentedBy", "name");
+
+    const updatedTask = updated.tasks.id(taskId);
+
+    res.json({
+      success: true,
+      message: "Comment added",
+      data: updatedTask.comments,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error adding comment", error: err.message });
+    res.status(500).json({
+      success: false,
+      message: "Error adding comment",
+      error: err.message,
+    });
   }
 };
+
 
 // 3. Add Time Log to Task
 exports.addTimeLogToTask = async (req, res) => {
