@@ -15,7 +15,7 @@ const TimeLogSchema = new mongoose.Schema({
 const TaskSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: String,
-  assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  assignedTo: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   status: {
     type: String,
     enum: ["pending", "in-progress", "completed"],
