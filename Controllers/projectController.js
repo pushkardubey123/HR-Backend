@@ -32,19 +32,21 @@ exports.addTaskToProject = async (req, res) => {
   const { title, description, assignedTo, dueDate } = req.body;
 
   try {
-    const project = await Project.findById(id); // ✅ Correct param: "id"
+    const project = await Project.findById(id);
     if (!project) {
       return res.status(404).json({ success: false, message: "Project not found" });
     }
 
+    const assignedArray = Array.isArray(assignedTo) ? assignedTo : [assignedTo];
+
     const newTask = {
       title,
       description,
-      assignedTo:Array.isArray(assignedTo) ? assignedTo : [assignedTo],
+      assignedTo: assignedArray,
       dueDate,
       status: "pending",
       comments: [],
-      timeLogs: []
+      timeLogs: [],
     };
 
     project.tasks.push(newTask);
@@ -53,16 +55,17 @@ exports.addTaskToProject = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Task added successfully",
-      data: project.tasks[project.tasks.length - 1]
+      data: project.tasks[project.tasks.length - 1],
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Error adding task",
-      error: error.message
+      error: error.message,
     });
   }
 };
+
 
 
 
