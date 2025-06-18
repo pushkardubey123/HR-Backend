@@ -40,7 +40,7 @@ exports.addTaskToProject = async (req, res) => {
     const newTask = {
       title,
       description,
-      assignedTo,
+      assignedTo:Array.isArray(assignedTo) ? assignedTo : [assignedTo],
       dueDate,
       status: "pending",
       comments: [],
