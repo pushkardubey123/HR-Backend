@@ -1,11 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const verifyToken = require("../Middleware/auth");
-const documentController = require("../Controllers/documentController");
+const {
+  uploadDocument,
+  getDocuments,
+  deleteDocument,
+  editDocumentType
+} = require("../Controllers/documentController");
+const auth = require("../Middleware/auth");
 
-router.post("/", verifyToken, documentController.uploadDocument);
-router.get("/", verifyToken, documentController.getAllDocuments);
-router.get("/employee/:id", verifyToken, documentController.getDocumentsByEmployee);
-router.delete("/:id", verifyToken, documentController.deleteDocument);
+router.post("/upload", auth, uploadDocument);
+router.get("/:employeeId", auth, getDocuments);
+router.delete("/:id", auth, deleteDocument);
+router.put("/:id", auth, editDocumentType);
 
 module.exports = router;

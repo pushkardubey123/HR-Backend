@@ -1,9 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const path = require("path");
 const userTbl = require("../Modals/User");
 const sendOTP = require("../utils/sendOtp");
 const pendingTbl = require("../Modals/PendingUser");
+const fs = require("fs");
+const path = require("path");
 
 const register = async (req, res) => {
   try {
@@ -139,15 +140,28 @@ const approvePendingUser = async (req, res) => {
   }
 };
 
-const rejectPendingUser=async (req, res) => {
+const rejectPendingUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    await pendingTbl.findByIdAndDelete(id);
+    const user = await pendingTbl.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Pending user not found" });
+    }
+
+    // 🧹 Delete profile image from server
+    if (user.profilePic) {
+      const imagePath = path.join(__dirname, "..", "uploads", user.profilePic);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    await pendingTbl.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "User request rejected" });
   } catch (err) {
     res.status(500).json({ success: false, message: "Failed to reject user" });
   }
-}
+};
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -273,9 +287,23 @@ const deleteUser = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({ success: false, error: true, message: "Access denied", code: 403 });
   }
+
   try {
-    const deleted = await userTbl.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.json({ success: false, error: true, message: "User not found", code: 404 });
+    const user = await userTbl.findById(req.params.id);
+    if (!user) {
+      return res.json({ success: false, error: true, message: "User not found", code: 404 });
+    }
+
+    // 🧹 Delete profile image from server
+    if (user.profilePic) {
+      const imagePath = path.join(__dirname, "..", "uploads", user.profilePic);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    await userTbl.findByIdAndDelete(req.params.id);
+
     res.json({ success: true, error: false, message: "Deleted", code: 200 });
   } catch (err) {
     res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });

@@ -27,6 +27,7 @@ app.use("/api/projects", require("./Router/projectRoutes"));
 app.use("/api/leaves", leaveRouter);
 app.use("/api/attendance", require("./Router/AttendenceRouter"));
 app.use("/api/payrolls", require("./Router/PayrollsRouter"));
+app.use("/api/documents", require("./Router/documentRoutes"));
 
 app.use(router)
 const PORT=process.env.PORT || 3003
