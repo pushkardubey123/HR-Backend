@@ -18,7 +18,7 @@ app.use(cors({
 dbConnect()
 app.use(express.json())
 app.use(fileupload())
-app.use("/uploads", express.static("uploads"));
+app.use("/static", express.static("./uploads"));
 
 app.use("/api/departments", require("./Router/departmentRouter"));
 app.use("/api/designations", require("./Router/designationRouter"));
