@@ -1,62 +1,88 @@
 const Document = require("../Modals/Document");
-const User = require("../Modals/Document");
+const path = require("path");
+const fs = require("fs");
+const deleteFile = require("../utils/deleteFile");
 
-// Upload document
+// Upload a document (by admin or employee)
 exports.uploadDocument = async (req, res) => {
   try {
-    const { documentType, employeeId } = req.body;
+    const { employeeId, documentType } = req.body;
+
     if (!req.files || !req.files.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
     const file = req.files.file;
-    const fileName = Date.now() + "_" + file.name;
-    const filePath = __dirname + `/../uploads/documents/${fileName}`;
+    const filename = Date.now() + "_" + file.name;
+    const uploadPath = path.join(__dirname, "..", "uploads", "documents");
 
-    file.mv(filePath, async (err) => {
-      if (err) {
-        return res.status(500).json({ success: false, message: "File upload failed", error: err });
-      }
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
 
-      const doc = await Document.create({
-        employeeId,
-        documentType,
-        fileUrl: `/uploads/documents/${fileName}`,
-      });
+    const finalPath = path.join(uploadPath, filename);
+    await file.mv(finalPath);
 
-      res.status(201).json({ success: true, message: "Document uploaded", data: doc });
+    const newDoc = new Document({
+      employeeId,
+      documentType,
+      fileUrl: `documents/${filename}`, // relative path
+      uploadedBy: req.user.id
     });
+
+    await newDoc.save();
+    res.status(201).json({ success: true, message: "Document uploaded", data: newDoc });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Upload failed", error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get all documents (Admin)
-exports.getAllDocuments = async (req, res) => {
+
+// Get all documents for an employee (admin or employee)
+exports.getDocuments = async (req, res) => {
   try {
-    const docs = await Document.find().populate("employeeId", "name email");
-    res.json({ success: true, data: docs });
+    const { employeeId } = req.params;
+
+    const docs = await Document.find({ employeeId })
+      .populate("uploadedBy", "name role")
+      .populate("employeeId", "name email ")
+      .sort({ uploadedAt: -1 });
+
+    res.status(200).json({ success: true, data: docs });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching documents", error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Get employee documents
-exports.getDocumentsByEmployee = async (req, res) => {
-  try {
-    const docs = await Document.find({ employeeId: req.params.id });
-    res.json({ success: true, data: docs });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching documents", error: error.message });
-  }
-};
-
-// Delete document
 exports.deleteDocument = async (req, res) => {
   try {
+    const doc = await Document.findById(req.params.id);
+    if (!doc) {
+      return res.status(404).json({ success: false, message: "Document not found" });
+    }
+
+    deleteFile(doc.fileUrl); // remove file from disk
     await Document.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: "Document deleted" });
+
+    res.status(200).json({ success: true, message: "Document deleted" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error deleting document", error: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.editDocumentType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { documentType } = req.body;
+
+    const updated = await Document.findByIdAndUpdate(id, { documentType }, { new: true });
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Document not found" });
+    }
+
+    res.status(200).json({ success: true, message: "Document updated", data: updated });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
