@@ -7,30 +7,77 @@ const pendingTbl = require("../Modals/PendingUser");
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, phone, gender, dob, address, departmentId, designationId, shiftId, doj, emergencyContact } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      gender,
+      dob,
+      address,
+      departmentId,
+      designationId,
+      shiftId,
+      doj,
+      emergencyContact,
+    } = req.body;
 
+    // Check if user already exists
     const emailExists = await pendingTbl.findOne({ email }) || await userTbl.findOne({ email });
     if (emailExists) {
       return res.json({ success: false, error: true, message: "Email already exists", code: 400 });
     }
 
+    // 🔽 Handle Profile Image
     let profilePic = null;
     if (req.files && req.files.profilePic) {
       const img = req.files.profilePic;
-      const filename = `${Date.now()}_${img.name}`;
-      const uploadPath = path.join(__dirname, "..", "uploads", filename);
-      await img.mv(uploadPath);
-      profilePic = filename;
+
+      const uploadPath = "uploads/profiles";
+      const fs = require("fs");
+      const path = require("path");
+
+      // Folder check/create
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+
+      const filename = Date.now() + "_" + img.name;
+      const fullPath = path.join(uploadPath, filename);
+
+      await img.mv(fullPath, (err) => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            code: 500,
+            message: "Error during file uploading",
+            error: true
+          });
+        }
+      });
+
+      profilePic = `profiles/${filename}`; // Path relative to /uploads
     }
 
+    // Create pending user
     const pendingUser = new pendingTbl({
-      name, email, password, phone, gender, dob, address,
-      departmentId, designationId, shiftId, doj,
+      name,
+      email,
+      password,
+      phone,
+      gender,
+      dob,
+      address,
+      departmentId,
+      designationId,
+      shiftId,
+      doj,
       emergencyContact: JSON.parse(emergencyContact),
-      profilePic
+      profilePic: profilePic || null
     });
 
     await pendingUser.save();
+
     res.json({
       success: true,
       message: "Registration pending admin approval",
@@ -41,6 +88,7 @@ const register = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 const getPendingUsers = async (req, res) => {
   try {
