@@ -2,6 +2,7 @@ const Report = require("../Modals/Reports");
 const Attendance = require("../Modals/Attendence");
 const Leave = require("../Modals/Leave");
 const ExitRequest = require("../Modals/ExitRequest");
+const Project = require("../Modals/Project");
 const User = require("../Modals/User");
 
 // 🔸 1. Generate a new report entry
@@ -41,18 +42,17 @@ const getAllReports = async (req, res) => {
 // 🔸 3. Dashboard analytics
 const getDashboardAnalytics = async (req, res) => {
   try {
-    const [employeeCount, leaveCount, attendanceCount, exitCount, todayAttendance] = await Promise.all([
-      User.countDocuments({ role: "employee" }),
-      Leave.countDocuments(),
-      Attendance.countDocuments(),
-      ExitRequest.countDocuments(),
-      Attendance.countDocuments({
-        date: {
-          $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-        }
-      }),
-    ]);
+    const employeeCount = await User.countDocuments({ role: "employee" });
+    const leaveCount = await Leave.countDocuments();
+    const attendanceCount = await Attendance.countDocuments();
+    const exitCount = await ExitRequest.countDocuments();
+    const projectCount = await Project.countDocuments();
+    const todayAttendance = await Attendance.countDocuments({
+      date: {
+        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+      },
+    });
 
     res.json({
       success: true,
@@ -62,13 +62,15 @@ const getDashboardAnalytics = async (req, res) => {
         totalAttendance: attendanceCount,
         todayAttendance,
         exitRequests: exitCount,
-      }
+        totalProjects: projectCount,
+      },
     });
   } catch (err) {
-    console.error("Analytics Error:", err.message);
-    res.status(500).json({ success: false, message: "Failed to fetch analytics" });
+    console.error("Dashboard Analytics Error:", err.message);
+    res.status(500).json({ success: false, message: "Analytics error" });
   }
 };
+
 
 module.exports = {
   generateReport,
