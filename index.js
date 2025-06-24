@@ -29,6 +29,7 @@ app.use("/api/attendance", require("./Router/AttendenceRouter"));
 app.use("/api/payrolls", require("./Router/PayrollsRouter"));
 app.use("/api/documents", require("./Router/documentRoutes"));
 app.use("/api/exit", require("./Router/exitRoutes"));
+app.use("/api/reports", require("./Router/reportRoutes"));
 
 
 app.use(router)
