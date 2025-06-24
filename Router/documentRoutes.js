@@ -13,4 +13,4 @@ router.get("/:employeeId", auth, getDocuments);
 router.delete("/:id", auth, deleteDocument);
 router.put("/:id", auth, editDocumentType);
 
-module.exports = router;
+module.exports = router;  
