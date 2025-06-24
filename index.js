@@ -28,6 +28,8 @@ app.use("/api/leaves", leaveRouter);
 app.use("/api/attendance", require("./Router/AttendenceRouter"));
 app.use("/api/payrolls", require("./Router/PayrollsRouter"));
 app.use("/api/documents", require("./Router/documentRoutes"));
+app.use("/api/exit", require("./Router/exitRoutes"));
+
 
 app.use(router)
 const PORT=process.env.PORT || 3003
