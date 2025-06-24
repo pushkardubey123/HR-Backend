@@ -6,7 +6,7 @@ const {
   getExitRequestsByEmployee,
   updateExitRequestByAdmin,
   deleteExitRequest
-} = require("../controllers/exitController");
+} = require("../Controllers/exitController");
 
 router.post("/submit", auth, createExitRequest); // Employee submit
 router.get("/my-requests", auth, getExitRequestsByEmployee); // Employee view
