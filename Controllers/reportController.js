@@ -60,9 +60,12 @@ const generateDynamicReport = async (req, res) => {
     } else {
       return res.status(400).json({ success: false, message: "Invalid report type" });
     }
+    console.log("Report Type:", type);
+console.log("Total Records:", data.length);
+console.log("First Record Sample:", data[0]);
 
     const filename = `${type}_report_${Date.now()}.pdf`;
-    const filePath = await generateReport(type, data, filename);
+const filePath = await generateReport(type, data, filename);
     const fileUrl = `${req.protocol}://${req.get("host")}/static/reports/${filename}`;
 
     res.json({ success: true, message: "Report generated", fileUrl });

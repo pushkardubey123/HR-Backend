@@ -10,57 +10,73 @@ const headingsMap = {
   projects: ["#", "Name", "Status", "Start", "End", "Total Tasks"]
 };
 
-const generateReport = (type, data = [], filename) => {
+const generateReport = async (type, data = [], filename) => {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 30 });
-    const filePath = path.join(__dirname, "../uploads/reports", filename);
+    try {
+      const doc = new PDFDocument({ margin: 30 });
+      const folderPath = path.join(__dirname, "../uploads/reports");
+      if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
 
-    if (!fs.existsSync(path.dirname(filePath))) {
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    }
+      const filePath = path.join(folderPath, filename);
+      const stream = fs.createWriteStream(filePath);
+      doc.pipe(stream);
 
-    const stream = fs.createWriteStream(filePath);
-    doc.pipe(stream);
+      // Title
+      doc
+        .fillColor("#1F4E79")
+        .fontSize(20)
+        .text(`${type.toUpperCase()} REPORT`, { align: "center" })
+        .moveDown(0.5);
 
-    doc.fontSize(18).text(`${type.toUpperCase()} Report`, { align: "center" }).moveDown();
+      // Generated timestamp
+      doc
+        .fontSize(10)
+        .fillColor("gray")
+        .text(`Generated on: ${new Date().toLocaleString()}`, { align: "right" })
+        .moveDown();
 
-    const headings = headingsMap[type];
-
-    if (!headings) {
-      doc.text("Unknown report type.");
-      doc.end();
-      return resolve(filePath);
-    }
-
-    // Header
-    doc.fontSize(12).font("Helvetica-Bold");
-    doc.text(headings.join(" | "));
-    doc.moveDown();
-
-    // Body
-    doc.font("Helvetica");
-    data.forEach((item, index) => {
-      let line = "";
-
-      if (type === "attendance") {
-        line = `${index + 1} | ${item.name} | ${item.email} | ${item.date} | ${item.status}`;
-      } else if (type === "leaves") {
-        line = `${index + 1} | ${item.name} | ${item.email} | ${item.leaveType} | ${item.start} | ${item.end} | ${item.status}`;
-      } else if (type === "users") {
-        line = `${index + 1} | ${item.name} | ${item.email} | ${item.phone} | ${item.department}`;
-      } else if (type === "exit") {
-        line = `${index + 1} | ${item.name} | ${item.email} | ${item.reason} | ${item.date} | ${item.status}`;
-      } else if (type === "projects") {
-        line = `${index + 1} | ${item.name} | ${item.status} | ${item.start} | ${item.end} | ${item.tasks}`;
+      const headers = headingsMap[type];
+      if (!headers) {
+        doc.text("Unknown report type");
+        doc.end();
+        return resolve(filePath);
       }
 
-      doc.text(line);
-    });
+      // Headers
+      doc
+        .fontSize(12)
+        .fillColor("#000")
+        .font("Helvetica-Bold")
+        .text(headers.join(" | "))
+        .moveDown(0.5);
 
-    doc.end();
+      // Body rows
+      doc.font("Helvetica").fontSize(11).fillColor("#000");
 
-    stream.on("finish", () => resolve(filePath));
-    stream.on("error", reject);
+      data.forEach((item, i) => {
+        let row = `${i + 1}`;
+        if (type === "users") {
+          row += ` | ${item.name} | ${item.email} | ${item.phone} | ${item.department}`;
+        } else if (type === "attendance") {
+          row += ` | ${item.name} | ${item.email} | ${item.date} | ${item.status}`;
+        } else if (type === "leaves") {
+          row += ` | ${item.name} | ${item.email} | ${item.leaveType} | ${item.start} | ${item.end} | ${item.status}`;
+        } else if (type === "exit") {
+          row += ` | ${item.name} | ${item.email} | ${item.reason} | ${item.date} | ${item.status}`;
+        } else if (type === "projects") {
+          row += ` | ${item.name} | ${item.status} | ${item.start} | ${item.end} | ${item.tasks}`;
+        }
+
+        doc.text(row).moveDown(0.2);
+      });
+
+      doc.end();
+
+      stream.on("finish", () => resolve(filePath));
+      stream.on("error", reject);
+    } catch (err) {
+      reject(err);
+    }
   });
 };
 
