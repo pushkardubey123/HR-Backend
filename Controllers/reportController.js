@@ -1,58 +1,112 @@
+// /Controllers/reportController.js
 const Report = require("../Modals/Reports");
+const generateReport = require("../utils/generateReport");
 const Attendance = require("../Modals/Attendence");
 const Leave = require("../Modals/Leave");
-const ExitRequest = require("../Modals/ExitRequest");
-const Project = require("../Modals/Project");
 const User = require("../Modals/User");
+const Exit = require("../Modals/ExitRequest");
+const Project = require("../Modals/Project");
 
-// 🔸 1. Generate a new report entry
-const generateReport = async (req, res) => {
+
+const generateDynamicReport = async (req, res) => {
   try {
-    const { type, filterParams, fileUrl } = req.body;
-    const generatedBy = req.user.id; // from token
+    const { type } = req.body;
+    let data = [];
 
-    const report = new Report({
-      type,
-      filterParams,
-      fileUrl,
-      generatedBy,
-    });
+    if (type === "attendance") {
+      const attendance = await Attendance.find().populate("employeeId", "name email");
+      data = attendance.map((a) => ({
+        name: a.employeeId.name,
+        email: a.employeeId.email,
+        date: new Date(a.date).toDateString(),
+        status: a.status,
+      }));
+    } else if (type === "leaves") {
+      const leaves = await Leave.find().populate("employeeId", "name email");
+      data = leaves.map((l) => ({
+        name: l.employeeId.name,
+        email: l.employeeId.email,
+        leaveType: l.leaveType,
+        start: new Date(l.startDate).toDateString(),
+        end: new Date(l.endDate).toDateString(),
+        status: l.status,
+      }));
+    } else if (type === "users") {
+      const users = await User.find({ role: "employee" }).populate("departmentId", "name");
+      data = users.map((u) => ({
+        name: u.name,
+        email: u.email,
+        phone: u.phone,
+        department: u.departmentId?.name || "-",
+      }));
+    } else if (type === "exit") {
+      const exits = await Exit.find().populate("employeeId", "name email");
+      data = exits.map((e) => ({
+        name: e.employeeId.name,
+        email: e.employeeId.email,
+        reason: e.reason,
+        date: new Date(e.resignationDate).toDateString(),
+        status: e.clearanceStatus || "Pending",
+      }));
+    } else if (type === "projects") {
+      const projects = await Project.find();
+      data = projects.map((p) => ({
+        name: p.name,
+        status: p.status,
+        start: p.startDate?.toDateString() || "-",
+        end: p.endDate?.toDateString() || "-",
+        tasks: p.tasks.length,
+      }));
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid report type" });
+    }
 
-    await report.save();
-    res.json({ success: true, message: "Report record created", data: report });
+    const filename = `${type}_report_${Date.now()}.pdf`;
+    const filePath = await generateReport(type, data, filename);
+    const fileUrl = `${req.protocol}://${req.get("host")}/static/reports/${filename}`;
+
+    res.json({ success: true, message: "Report generated", fileUrl });
   } catch (err) {
-    console.error("Generate Report Error:", err.message);
-    res.status(500).json({ success: false, message: "Failed to generate report" });
+    console.error("Report Gen Error:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-// 🔸 2. Get all reports
-const getAllReports = async (req, res) => {
+// 🔹 Get all Reports
+const getReports = async (req, res) => {
   try {
     const reports = await Report.find()
       .populate("generatedBy", "name email")
-      .sort({ createdAt: -1 });
+      .sort({ generatedAt: -1 });
 
     res.json({ success: true, data: reports });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to fetch reports" });
   }
 };
 
-// 🔸 3. Dashboard analytics
+// 🔸 Dashboard Analytics
 const getDashboardAnalytics = async (req, res) => {
   try {
-    const employeeCount = await User.countDocuments({ role: "employee" });
-    const leaveCount = await Leave.countDocuments();
-    const attendanceCount = await Attendance.countDocuments();
-    const exitCount = await ExitRequest.countDocuments();
-    const projectCount = await Project.countDocuments();
-    const todayAttendance = await Attendance.countDocuments({
-      date: {
-        $gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        $lt: new Date(new Date().setHours(23, 59, 59, 999)),
-      },
-    });
+    const [
+      employeeCount,
+      leaveCount,
+      attendanceCount,
+      exitCount,
+      todayAttendance,
+      projectCount,
+    ] = await Promise.all([
+      User.countDocuments({ role: "employee" }),
+      Leave.countDocuments(),
+      Attendance.countDocuments(),
+      ExitRequest.countDocuments(),
+      Attendance.countDocuments({
+        date: {
+          $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          $lt: new Date(new Date().setHours(23, 59, 59, 999)),
+        },
+      }),
+      Project.countDocuments(),
+    ]);
 
     res.json({
       success: true,
@@ -61,8 +115,8 @@ const getDashboardAnalytics = async (req, res) => {
         totalLeaves: leaveCount,
         totalAttendance: attendanceCount,
         todayAttendance,
-        exitRequests: exitCount,
         totalProjects: projectCount,
+        exitRequests: exitCount,
       },
     });
   } catch (err) {
@@ -71,9 +125,8 @@ const getDashboardAnalytics = async (req, res) => {
   }
 };
 
-
 module.exports = {
-  generateReport,
-  getAllReports,
-  getDashboardAnalytics
+  generateDynamicReport,
+  getReports,
+  getDashboardAnalytics,
 };
