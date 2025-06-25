@@ -1,28 +1,28 @@
+// /Modals/Report.js
 const mongoose = require("mongoose");
 
-const ReportSchema = new mongoose.Schema({
+const reportSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["Attendance", "Leave", "Exit", "Project", "Custom"],
-    required: true
+    enum: ["Attendance", "Leaves", "Exit", "Employee", "Custom"],
+    required: true,
   },
   filterParams: {
     type: Object,
-    default: {}
+    default: {},
   },
   fileUrl: {
     type: String,
-    default: null
+    required: true,
   },
   generatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
   },
   generatedAt: {
     type: Date,
-    default: Date.now
-  }
-}, { timestamps: true });
+    default: Date.now,
+  },
+});
 
-module.exports = mongoose.model("Report", ReportSchema);
+module.exports = mongoose.model("Report", reportSchema);

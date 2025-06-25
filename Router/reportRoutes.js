@@ -1,20 +1,20 @@
+// /Router/reportRoutes.js
 const express = require("express");
 const router = express.Router();
 const auth = require("../Middleware/auth");
-
 const {
-  generateReport,
-  getAllReports,
+  generateDynamicReport ,
+  getReports,
   getDashboardAnalytics,
 } = require("../Controllers/reportController");
 
-// 🔹 Generate a new report record (just metadata for now)
-router.post("/generate", auth, generateReport);
+// 🔹 Create Report Entry
+router.post("/generate", auth, generateDynamicReport );
 
-// 🔹 Get all report logs (admin view)
-router.get("/", auth, getAllReports);
+// 🔹 Get All Reports
+router.get("/", auth, getReports);
 
-// 🔹 Dashboard analytics cards (counts/summaries)
+// 🔹 Dashboard Analytics
 router.get("/dashboard", auth, getDashboardAnalytics);
 
 module.exports = router;
