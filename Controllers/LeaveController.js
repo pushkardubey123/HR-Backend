@@ -22,9 +22,8 @@ const createLeave = async (req, res) => {
         code: 400
       });
     }
-  } catch (error) {
-    console.error("Create Leave Error:", error.message);
-    res.json({
+  } catch  {
+    s.json({
       success: false,
       error: true,
       message: "Internal Server Error",
@@ -44,8 +43,7 @@ const getAllLeaves = async (req, res) => {
       code: 200,
       data
     });
-  } catch (error) {
-    console.error("Get All Leaves Error:", error.message);
+  } catch  {
     res.json({
       success: false,
       error: true,
@@ -71,8 +69,7 @@ const getLeavesByEmployee = async (req, res) => {
       code: 200,
       data: leaves,
     });
-  } catch (error) {
-    console.error("Get Leaves By Employee Error:", error.message);
+  } catch  {
     res.json({
       success: false,
       error: true,
@@ -104,9 +101,8 @@ const getLeaveById = async (req, res) => {
       code: 200,
       data
     });
-  } catch (error) {
-    console.error("Get Leave By ID Error:", error.message);
-    res.json({
+  } catch  {
+     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
@@ -141,9 +137,8 @@ const updateLeaveStatus = async (req, res) => {
       code: 200,
       data: updated
     });
-  } catch (error) {
-    console.error("Update Leave Error:", error.message);
-    res.json({
+  } catch  {
+    s.json({
       success: false,
       error: true,
       message: "Internal Server Error",
@@ -172,9 +167,8 @@ const deleteLeave = async (req, res) => {
       message: "Leave deleted successfully",
       code: 200
     });
-  } catch (error) {
-    console.error("Delete Leave Error:", error.message);
-    res.json({
+  } catch  {
+    s.json({
       success: false,
       error: true,
       message: "Internal Server Error",

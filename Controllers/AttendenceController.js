@@ -52,8 +52,7 @@ const markAttendance = async (req, res) => {
 
     const result = await attendance.save();
     res.status(201).json({ success: true, message: "Attendance marked successfully", data: result });
-  } catch (err) {
-    console.error("Mark Attendance Error:", err.message);
+  } catch{
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
@@ -113,8 +112,7 @@ const markSession = async (req, res) => {
     const saved = await attendance.save();
     res.status(200).json({ success: true, message: "Session updated", data: saved });
 
-  } catch (err) {
-    console.error("Session Error:", err.message);
+  } catch  {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };

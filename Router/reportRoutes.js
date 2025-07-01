@@ -11,8 +11,8 @@ const {
 // 🔹 Create Report Entry
 router.post("/generate", auth, generateDynamicReport );
 
-// 🔹 Get All Reports
-router.get("/", auth, getReports);
+router.get("/stream", generateDynamicReport); // /api/reports/stream?type=users
+
 
 // 🔹 Dashboard Analytics
 router.get("/dashboard", auth, getDashboardAnalytics);

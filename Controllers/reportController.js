@@ -1,31 +1,79 @@
 // /Controllers/reportController.js
 const Report = require("../Modals/Reports");
 const generateReport = require("../utils/generateReport");
+const PDFDocument = require("pdfkit");
 const Attendance = require("../Modals/Attendence");
 const Leave = require("../Modals/Leave");
 const User = require("../Modals/User");
 const Exit = require("../Modals/ExitRequest");
 const Project = require("../Modals/Project");
 
+const streamReportDirectly = (res, type, data) => {
+  const doc = new PDFDocument({ margin: 30 });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `inline; filename=${type}_report.pdf`);
+
+  doc.pipe(res);
+
+  // Heading
+  doc
+    .fillColor("#1F4E79")
+    .fontSize(20)
+    .text(`${type.toUpperCase()} REPORT`, { align: "center" })
+    .moveDown();
+
+  // Table headers
+  const headingsMap = {
+    attendance: ["#", "Name", "Email", "Date", "Status"],
+    leaves: ["#", "Name", "Email", "Leave Type", "Start", "End", "Status"],
+    users: ["#", "Name", "Email", "Phone", "Department"],
+    exit: ["#", "Name", "Email", "Reason", "Date", "Status"],
+    projects: ["#", "Name", "Status", "Start", "End", "Total Tasks"]
+  };
+
+  const headers = headingsMap[type] || [];
+  doc.fontSize(12).font("Helvetica-Bold").text(headers.join(" | ")).moveDown();
+
+  doc.font("Helvetica").fontSize(10);
+
+  data.forEach((item, i) => {
+    let row = `${i + 1}`;
+    if (type === "attendance") {
+      row += ` | ${item.name} | ${item.email} | ${item.date} | ${item.status}`;
+    } else if (type === "leaves") {
+      row += ` | ${item.name} | ${item.email} | ${item.leaveType} | ${item.start} | ${item.end} | ${item.status}`;
+    } else if (type === "users") {
+      row += ` | ${item.name} | ${item.email} | ${item.phone} | ${item.department}`;
+    } else if (type === "exit") {
+      row += ` | ${item.name} | ${item.email} | ${item.reason} | ${item.date} | ${item.status}`;
+    } else if (type === "projects") {
+      row += ` | ${item.name} | ${item.status} | ${item.start} | ${item.end} | ${item.tasks}`;
+    }
+    doc.text(row).moveDown(0.2);
+  });
+
+  doc.end();
+};
 
 const generateDynamicReport = async (req, res) => {
   try {
-    const { type } = req.body;
+    const { type } = req.query; // 🟡 use query for GET
     let data = [];
 
     if (type === "attendance") {
       const attendance = await Attendance.find().populate("employeeId", "name email");
       data = attendance.map((a) => ({
-        name: a.employeeId.name,
-        email: a.employeeId.email,
+        name: a.employeeId?.name || "-",
+        email: a.employeeId?.email || "-",
         date: new Date(a.date).toDateString(),
         status: a.status,
       }));
     } else if (type === "leaves") {
       const leaves = await Leave.find().populate("employeeId", "name email");
       data = leaves.map((l) => ({
-        name: l.employeeId.name,
-        email: l.employeeId.email,
+        name: l.employeeId?.name || "-",
+        email: l.employeeId?.email || "-",
         leaveType: l.leaveType,
         start: new Date(l.startDate).toDateString(),
         end: new Date(l.endDate).toDateString(),
@@ -42,8 +90,8 @@ const generateDynamicReport = async (req, res) => {
     } else if (type === "exit") {
       const exits = await Exit.find().populate("employeeId", "name email");
       data = exits.map((e) => ({
-        name: e.employeeId.name,
-        email: e.employeeId.email,
+        name: e.employeeId?.name || "-",
+        email: e.employeeId?.email || "-",
         reason: e.reason,
         date: new Date(e.resignationDate).toDateString(),
         status: e.clearanceStatus || "Pending",
@@ -60,32 +108,42 @@ const generateDynamicReport = async (req, res) => {
     } else {
       return res.status(400).json({ success: false, message: "Invalid report type" });
     }
-    console.log("Report Type:", type);
-console.log("Total Records:", data.length);
-console.log("First Record Sample:", data[0]);
 
-    const filename = `${type}_report_${Date.now()}.pdf`;
-const filePath = await generateReport(type, data, filename);
-    const fileUrl = `${req.protocol}://${req.get("host")}/static/reports/${filename}`;
-
-    res.json({ success: true, message: "Report generated", fileUrl });
-  } catch (err) {
-    console.error("Report Gen Error:", err.message);
+    // 🟢 stream report directly
+    streamReportDirectly(res, type, data);
+  } catch  {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-// 🔹 Get all Reports
+
+
 const getReports = async (req, res) => {
   try {
     const reports = await Report.find()
-      .populate("generatedBy", "name email")
+      .populate("generatedBy", "name email") // user info
       .sort({ generatedAt: -1 });
 
-    res.json({ success: true, data: reports });
-  } catch {
-    res.status(500).json({ success: false, message: "Failed to fetch reports" });
+    // Safe formatting to avoid .name of null errors
+    const formattedReports = reports.map((report) => ({
+      _id: report._id,
+      type: report.type,
+      fileUrl: report.fileUrl,
+      filterParams: report.filterParams,
+      generatedAt: report.generatedAt,
+      generatedBy: report.generatedBy
+        ? {
+            name: report.generatedBy.name,
+            email: report.generatedBy.email,
+          }
+        : null,
+    }));
+
+    res.json({ success: true, data: formattedReports });
+  } catch  {
+     res.status(500).json({ success: false, message: "Failed to fetch reports" });
   }
 };
+
 
 // 🔸 Dashboard Analytics
 const getDashboardAnalytics = async (req, res) => {
@@ -101,7 +159,7 @@ const getDashboardAnalytics = async (req, res) => {
       User.countDocuments({ role: "employee" }),
       Leave.countDocuments(),
       Attendance.countDocuments(),
-      ExitRequest.countDocuments(),
+      Exit.countDocuments(),
       Attendance.countDocuments({
         date: {
           $gte: new Date(new Date().setHours(0, 0, 0, 0)),
@@ -122,8 +180,7 @@ const getDashboardAnalytics = async (req, res) => {
         exitRequests: exitCount,
       },
     });
-  } catch (err) {
-    console.error("Dashboard Analytics Error:", err.message);
+  } catch  {
     res.status(500).json({ success: false, message: "Analytics error" });
   }
 };
@@ -132,4 +189,5 @@ module.exports = {
   generateDynamicReport,
   getReports,
   getDashboardAnalytics,
+  streamReportDirectly
 };

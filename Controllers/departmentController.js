@@ -33,8 +33,7 @@ const addDepartment = async (req, res) => {
         code: 400
       });
     }
-  } catch (err) {
-    console.error("Add Department Error:", err.message);
+  } catch{
     res.json({
       success: false,
       error: true,
@@ -54,7 +53,7 @@ const getDepartments = async (req, res) => {
       code: 200,
       data
     });
-  } catch (err) {
+  } catch  {
     res.json({
       success: false,
       error: true,
@@ -89,8 +88,8 @@ const updateDepartment = async (req, res) => {
       code: 200,
       data: updated
     });
-  } catch (err) {
-    console.error("Update Department Error:", err.message);
+  } catch  {
+    
     res.json({
       success: false,
       error: true,
@@ -118,8 +117,8 @@ const deleteDepartment = async (req, res) => {
       message: "Department deleted successfully",
       code: 200
     });
-  } catch (err) {
-    console.error("Delete Department Error:", err.message);
+  } catch  {
+    
     res.json({
       success: false,
       error: true,

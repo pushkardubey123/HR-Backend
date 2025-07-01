@@ -12,8 +12,7 @@ const addShift = async (req, res) => {
     const result = await shift.save();
 
     res.json({ success: true, message: "Shift created", data: result });
-  } catch (err) {
-    console.error("Add Shift Error:", err.message);
+  } catch {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
