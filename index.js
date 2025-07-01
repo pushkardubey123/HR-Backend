@@ -5,6 +5,8 @@ const fileupload=require('express-fileupload')
 const router=require('./Router/userRouter')
 const cors =require('cors')
 const leaveRouter=require('./Router/LeaveRouter')
+const notifyTaskDeadlines = require("./utils/taskDeadlineNotifier");
+const birthdayAnniversaryNotifier = require("./utils/birthdayAnniversaryNotifier");
 
 dotenv.config()
 const app= express()
@@ -30,9 +32,14 @@ app.use("/api/payrolls", require("./Router/PayrollsRouter"));
 app.use("/api/documents", require("./Router/documentRoutes"));
 app.use("/api/exit", require("./Router/exitRoutes"));
 app.use("/api/reports", require("./Router/reportRoutes"));
-
-
+app.use("/api/notifications", require("./Router/notificationRoutes"));
 app.use(router)
+
+ 
+notifyTaskDeadlines();
+
+birthdayAnniversaryNotifier();
+
 const PORT=process.env.PORT || 3003
 
 app.listen(PORT,()=>{

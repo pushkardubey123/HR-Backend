@@ -14,10 +14,8 @@ const generateReport = async (type, data = [], filename) => {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ margin: 30 });
-      const folderPath = path.join(__dirname, "../uploads/reports");
-      if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
 
-      const filePath = path.join(folderPath, filename);
+      const filePath = path.join( filename);
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 

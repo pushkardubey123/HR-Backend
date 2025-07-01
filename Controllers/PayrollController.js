@@ -33,8 +33,8 @@ const createPayroll = async (req, res) => {
       message: "Payroll created successfully",
       data: saved,
     });
-  } catch (err) {
-    console.error("Create Payroll Error:", err.message);
+  } catch  {
+    
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -54,8 +54,8 @@ const getAllPayrolls = async (req, res) => {
       message: "Payrolls fetched successfully",
       data: payrolls,
     });
-  } catch (err) {
-    console.error("Get All Payrolls Error:", err.message);
+  } catch  {
+    
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -80,8 +80,7 @@ const getPayrollById = async (req, res) => {
       message: "Payroll fetched successfully",
       data: payroll,
     });
-  } catch (err) {
-    console.error("Get Payroll Error:", err.message);
+  } catch  {
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -102,8 +101,7 @@ const getPayrollByEmployeeId = async (req, res) => {
       message: "Payrolls fetched for employee",
       data: payrolls,
     });
-  } catch (error) {
-    console.error("Get Employee Payroll Error:", error.message);
+  } catch  {
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -139,9 +137,8 @@ const updatePayroll = async (req, res) => {
       message: "Payroll updated successfully",
       data: updated,
     });
-  } catch (err) {
-    console.error("Update Payroll Error:", err.message);
-    res.status(500).json({
+  } catch  {
+       res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
@@ -163,9 +160,8 @@ const deletePayroll = async (req, res) => {
       success: true,
       message: "Payroll deleted successfully",
     });
-  } catch (err) {
-    console.error("Delete Payroll Error:", err.message);
-    res.status(500).json({
+  } catch  {
+       res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });

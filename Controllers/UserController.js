@@ -23,13 +23,11 @@ const register = async (req, res) => {
       emergencyContact,
     } = req.body;
 
-    // Check if user already exists
     const emailExists = await pendingTbl.findOne({ email }) || await userTbl.findOne({ email });
     if (emailExists) {
       return res.json({ success: false, error: true, message: "Email already exists", code: 400 });
     }
 
-    // 🔽 Handle Profile Image
     let profilePic = null;
     if (req.files && req.files.profilePic) {
       const img = req.files.profilePic;
@@ -37,8 +35,6 @@ const register = async (req, res) => {
       const uploadPath = "uploads/profiles";
       const fs = require("fs");
       const path = require("path");
-
-      // Folder check/create
       if (!fs.existsSync(uploadPath)) {
         fs.mkdirSync(uploadPath, { recursive: true });
       }
@@ -57,7 +53,7 @@ const register = async (req, res) => {
         }
       });
 
-      profilePic = `profiles/${filename}`; // Path relative to /uploads
+      profilePic = `profiles/${filename}`;
     }
 
     // Create pending user
@@ -84,8 +80,7 @@ const register = async (req, res) => {
       message: "Registration pending admin approval",
       code: 201
     });
-  } catch (err) {
-    console.error("Register Error:", err.message);
+  } catch  {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -105,8 +100,7 @@ const getPendingUsers = async (req, res) => {
       code: 200,
       data: users,
     });
-  } catch (err) {
-    console.error("Get Pending Users Error:", err.message);
+  } catch  {
     res.status(500).json({
       success: false,
       error: true,
@@ -157,7 +151,7 @@ const rejectPendingUser = async (req, res) => {
 
     await pendingTbl.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "User request rejected" });
-  } catch (err) {
+  } catch {
     res.status(500).json({ success: false, message: "Failed to reject user" });
   }
 };
@@ -181,7 +175,7 @@ const login = async (req, res) => {
         designationId: user.designationId, shiftId: user.shiftId, status: user.status,
       }
     });
-  } catch (err) {
+  } catch {
     res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
   }
 };
@@ -263,7 +257,7 @@ const getUserById = async (req, res) => {
       return res.json({ success: false, error: true, message: "Not found", code: 404 });
     }
     res.json({ success: true, error: false, message: "User found", code: 200, data: user });
-  } catch (err) {
+  } catch  {
     res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
   }
 };
@@ -277,7 +271,7 @@ const updateUser = async (req, res) => {
     const updated = await userTbl.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!updated) return res.json({ success: false, error: true, message: "User not found", code: 404 });
     res.json({ success: true, error: false, message: "Updated", code: 200, data: updated });
-  } catch (err) {
+  } catch  {
     res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
   }
 };
@@ -305,7 +299,7 @@ const deleteUser = async (req, res) => {
     await userTbl.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, error: false, message: "Deleted", code: 200 });
-  } catch (err) {
+  } catch {
     res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
   }
 };

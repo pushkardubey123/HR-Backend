@@ -33,9 +33,8 @@ const addDesignation = async (req, res) => {
         code: 400
       });
     }
-  } catch (err) {
-    console.error("Add Designation Error:", err.message);
-    res.json({
+  } catch  {
+      res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
@@ -54,7 +53,7 @@ const getDesignations = async (req, res) => {
       code: 200,
       data
     });
-  } catch (err) {
+  } catch  {
     res.json({
       success: false,
       error: true,
@@ -90,8 +89,8 @@ const updateDesignation = async (req, res) => {
       code: 200,
       data: updated
     });
-  } catch (err) {
-    console.error("Update Designation Error:", err.message);
+  } catch  {
+    
     res.json({
       success: false,
       error: true,
@@ -119,8 +118,8 @@ const deleteDesignation = async (req, res) => {
       message: "Designation deleted successfully",
       code: 200
     });
-  } catch (err) {
-    console.error("Delete Designation Error:", err.message);
+  } catch  {
+    
     res.json({
       success: false,
       error: true,
