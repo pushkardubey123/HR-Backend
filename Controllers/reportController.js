@@ -109,7 +109,6 @@ const generateDynamicReport = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid report type" });
     }
 
-    // 🟢 stream report directly
     streamReportDirectly(res, type, data);
   } catch  {
     res.status(500).json({ success: false, message: "Server error" });
@@ -120,10 +119,9 @@ const generateDynamicReport = async (req, res) => {
 const getReports = async (req, res) => {
   try {
     const reports = await Report.find()
-      .populate("generatedBy", "name email") // user info
+      .populate("generatedBy", "name email")
       .sort({ generatedAt: -1 });
 
-    // Safe formatting to avoid .name of null errors
     const formattedReports = reports.map((report) => ({
       _id: report._id,
       type: report.type,
@@ -145,7 +143,6 @@ const getReports = async (req, res) => {
 };
 
 
-// 🔸 Dashboard Analytics
 const getDashboardAnalytics = async (req, res) => {
   try {
     const [
