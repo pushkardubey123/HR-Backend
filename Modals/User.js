@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema(
     },
     documents: [String],
     profilePic: String,
+    basicSalary: {
+  type: Number,
+  default: 0,
+},
     emergencyContact: {
       name: String,
       phone: String,

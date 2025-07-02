@@ -1,29 +1,40 @@
 const Payroll = require("../Modals/Payroll");
 const User = require("../Modals/User");
 
-// ➤ Create Payroll
 const createPayroll = async (req, res) => {
   try {
     const { employeeId, month, basicSalary, allowances = [], deductions = [] } = req.body;
 
-    if (!employeeId || !month || !basicSalary) {
+    if (!employeeId || !month) {
       return res.status(400).json({
         success: false,
-        message: "Employee, Month, and Basic Salary are required",
+        message: "Employee and Month are required",
       });
+    }
+    let finalBasicSalary = basicSalary;
+    if (!finalBasicSalary) {
+      const employee = await User.findById(employeeId);
+      if (!employee) {
+        return res.status(404).json({
+          success: false,
+          message: "Employee not found",
+        });
+      }
+      finalBasicSalary = employee.basicSalary || 0;
     }
 
     const totalAllowances = allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
     const totalDeductions = deductions.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const netSalary = basicSalary + totalAllowances - totalDeductions;
+    const netSalary = finalBasicSalary + totalAllowances - totalDeductions;
 
     const payroll = new Payroll({
       employeeId,
       month,
-      basicSalary,
+      basicSalary: finalBasicSalary,
       allowances,
       deductions,
       netSalary,
+      generatedBy: req.user.id,
     });
 
     const saved = await payroll.save();
@@ -33,8 +44,8 @@ const createPayroll = async (req, res) => {
       message: "Payroll created successfully",
       data: saved,
     });
-  } catch  {
-    
+  } catch (err) {
+    console.error("Payroll Error:", err);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

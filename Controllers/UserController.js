@@ -113,6 +113,7 @@ const getPendingUsers = async (req, res) => {
 const approvePendingUser = async (req, res) => {
   try {
     const pendingUser = await pendingTbl.findById(req.params.id);
+    const { basicSalary } = req.body;
     if (!pendingUser) {
       return res.status(404).json({ success: false, message: "Pending user not found" });
     }
@@ -120,10 +121,12 @@ const approvePendingUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(pendingUser.password, 10);
 
     const user = new userTbl({
-      ...pendingUser.toObject(),
-      passwordHash: hashedPassword,
-      role: "employee"
-    });
+  ...pendingUser.toObject(),
+  passwordHash: hashedPassword,
+  role: "employee",
+  basicSalary: basicSalary || 0
+});
+
 
     await user.save();
     await pendingTbl.findByIdAndDelete(req.params.id);
