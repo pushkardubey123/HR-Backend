@@ -4,6 +4,7 @@ const dbConnect=require('./Dbconnect/dbConfig')
 const fileupload=require('express-fileupload')
 const router=require('./Router/userRouter')
 const cors =require('cors')
+const path = require("path");
 const leaveRouter=require('./Router/LeaveRouter')
 const notifyTaskDeadlines = require("./utils/taskDeadlineNotifier");
 const birthdayAnniversaryNotifier = require("./utils/birthdayAnniversaryNotifier");
@@ -20,7 +21,7 @@ app.use(cors({
 dbConnect()
 app.use(express.json())
 app.use(fileupload())
-app.use("/static", express.static("./uploads"));
+app.use("/static", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/departments", require("./Router/departmentRouter"));
 app.use("/api/designations", require("./Router/designationRouter"));
