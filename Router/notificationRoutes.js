@@ -9,18 +9,23 @@ const {
   clearAll,
   sendCustomNotification,
   getAdminAlerts,
+  deleteNotification,
+  getAllNotification,
+  getEmployeeNotifications,
+  removeFromBell,
+  clearBellNotifications,
 } = require("../Controllers/notificationController");
 
-// ✅ Get logged-in user's notifications
 router.get("/", verifyToken, getMyNotifications);
 
-// ✅ Mark a single notification as read
 router.put("/:id/read", verifyToken, markAsRead);
 
-// ✅ Clear all notifications
-router.delete("/", verifyToken, clearAll);
+router.put("/clear-bell", verifyToken, clearBellNotifications); 
+router.get("/employee/:employeeId",verifyToken, getEmployeeNotifications);
 
 router.get("/admin-alerts", verifyToken, getAdminAlerts);
-router.post("/send", verifyToken, sendCustomNotification);
+router.post("/send", sendCustomNotification);
+router.get("/all", getAllNotification);
+router.delete("/:id", verifyToken, deleteNotification);
 
 module.exports = router;

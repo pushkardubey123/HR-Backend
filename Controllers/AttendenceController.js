@@ -1,5 +1,6 @@
 const attendanceTbl = require("../Modals/Attendence");
 const { getDistance } = require("geolib");
+const moment = require("moment");
 
 const officeLocation = {
   latitude: 26.889,
@@ -54,6 +55,31 @@ const markAttendance = async (req, res) => {
     res.status(201).json({ success: true, message: "Attendance marked successfully", data: result });
   } catch{
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const getMonthlyAttendance = async (req, res) => {
+  try {
+    const { month } = req.query; // format: '2025-07'
+
+    if (!month) {
+      return res.status(400).json({ success: false, message: "Month is required" });
+    }
+
+    // Parse month start and end
+    const startOfMonth = moment(month, "YYYY-MM").startOf('month').toDate();
+    const endOfMonth = moment(month, "YYYY-MM").endOf('month').toDate();
+
+    const attendanceRecords = await attendanceTbl.find({
+      date: { $gte: startOfMonth, $lte: endOfMonth }
+    }).populate("employeeId", "name email");
+    res.status(200).json({
+      success: true,
+      data: attendanceRecords
+    });
+  } catch (error) {
+    console.error("Error fetching monthly attendance:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
@@ -191,6 +217,49 @@ const deleteAttendance = async (req, res) => {
   }
 };
 
+const bulkMarkAttendance = async (req, res) => {
+  try {
+    const { employeeIds, date } = req.body;
+
+    if (!employeeIds || !date) {
+      return res.status(400).json({ success: false, message: "Required fields missing" });
+    }
+
+    const newAttendances = [];
+
+    for (const empId of employeeIds) {
+      // Check if already marked
+      const exists = await attendanceTbl.findOne({
+        employeeId: empId,
+        date: { $gte: new Date(date), $lt: new Date(new Date(date).getTime() + 86400000) }
+      });
+
+      if (!exists) {
+        const newAtt = new attendanceTbl({
+          employeeId: empId,
+          date,
+          inTime: "09:00",
+          status: "Present",
+          statusType: "Manual",
+          inOutLogs: [{ inTime: "09:00", outTime: null }]
+        });
+        await newAtt.save();
+        newAttendances.push(newAtt);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Success: ${newAttendances.length} attendance records added.`,
+      data: newAttendances, // Send added data
+    });
+  } catch (err) {
+    console.error("Bulk mark error:", err);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
 module.exports = {
   markAttendance,
   markSession, 
@@ -198,4 +267,6 @@ module.exports = {
   getAttendanceByEmployee,
   updateAttendance,
   deleteAttendance,
+  bulkMarkAttendance,
+  getMonthlyAttendance
 };

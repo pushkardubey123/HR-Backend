@@ -3,7 +3,7 @@ const User = require("../Modals/User");
 
 const createPayroll = async (req, res) => {
   try {
-    const { employeeId, month, basicSalary, allowances = [], deductions = [] } = req.body;
+    const { employeeId, month, basicSalary, allowances = [], deductions = [], workingDays = 0, paidDays = 0 } = req.body;
 
     if (!employeeId || !month) {
       return res.status(400).json({
@@ -27,15 +27,17 @@ const createPayroll = async (req, res) => {
     const totalDeductions = deductions.reduce((sum, item) => sum + (item.amount || 0), 0);
     const netSalary = finalBasicSalary + totalAllowances - totalDeductions;
 
-    const payroll = new Payroll({
-      employeeId,
-      month,
-      basicSalary: finalBasicSalary,
-      allowances,
-      deductions,
-      netSalary,
-      generatedBy: req.user.id,
-    });
+const payroll = new Payroll({
+  employeeId,
+  month,
+  basicSalary: finalBasicSalary,
+  allowances,
+  deductions,
+  workingDays,
+  paidDays,
+  netSalary,
+  generatedBy: req.user.id,
+});
 
     const saved = await payroll.save();
 
@@ -57,7 +59,14 @@ const createPayroll = async (req, res) => {
 const getAllPayrolls = async (req, res) => {
   try {
     const payrolls = await Payroll.find()
-      .populate("employeeId", "name email role")
+.populate({
+  path: "employeeId",
+  select: "name email pan bankAccount departmentId designationId",
+  populate: [
+    { path: "departmentId", select: "name" },
+    { path: "designationId", select: "name" }
+  ]
+})
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -124,7 +133,7 @@ const getPayrollByEmployeeId = async (req, res) => {
 // ➤ Update Payroll
 const updatePayroll = async (req, res) => {
   try {
-    const { employeeId, month, basicSalary, allowances = [], deductions = [] } = req.body;
+const { employeeId, month, basicSalary, allowances = [], deductions = [], workingDays = 0, paidDays = 0 } = req.body;
 
     const totalAllowances = allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
     const totalDeductions = deductions.reduce((sum, item) => sum + (item.amount || 0), 0);
@@ -132,7 +141,7 @@ const updatePayroll = async (req, res) => {
 
     const updated = await Payroll.findByIdAndUpdate(
       req.params.id,
-      { employeeId, month, basicSalary, allowances, deductions, netSalary },
+      { employeeId, month, basicSalary, allowances, deductions, netSalary,workingDays,paidDays },
       { new: true }
     );
 

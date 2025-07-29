@@ -12,6 +12,8 @@ const PendingUserSchema = new mongoose.Schema({
   designationId: {type:mongoose.Schema.Types.ObjectId,ref: "Designation"},
   shiftId: {type:mongoose.Schema.Types.ObjectId,ref: "Shift"},
   doj: Date,
+  pan: String,
+bankAccount: String,
   emergencyContact: {
     name: String,
     phone: String,

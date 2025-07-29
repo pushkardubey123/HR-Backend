@@ -1,4 +1,45 @@
 const leaveTbl = require("../Modals/Leave");
+const moment = require("moment");
+
+// Get Leave Report (Monthly/Yearly)
+const getLeaveReport = async (req, res) => {
+  try {
+    const { type, month, year } = req.query;  // type: monthly/yearly
+
+    let start, end;
+    if (type === "Monthly") {
+      if (!month) {
+        return res.status(400).json({ success: false, message: "Month is required for monthly report" });
+      }
+      start = moment(month, "YYYY-MM").startOf('month').toDate();
+      end = moment(month, "YYYY-MM").endOf('month').toDate();
+    } else if (type === "Yearly") {
+      if (!year) {
+        return res.status(400).json({ success: false, message: "Year is required for yearly report" });
+      }
+      start = moment(year, "YYYY").startOf('year').toDate();
+      end = moment(year, "YYYY").endOf('year').toDate();
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid type. Must be Monthly or Yearly" });
+    }
+
+    const leaves = await leaveTbl.find({ startDate: { $gte: start, $lte: end } })
+      .populate("employeeId", "name email");
+
+    res.json({
+      success: true,
+      data: leaves
+    });
+
+  } catch (err) {
+    console.error("Error fetching leave report:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  getLeaveReport
+};
 
 // ➤ Add Leave
 const createLeave = async (req, res) => {
@@ -183,5 +224,6 @@ module.exports = {
   getLeaveById,
   updateLeaveStatus,
   deleteLeave,
-  getLeavesByEmployee
+  getLeavesByEmployee,
+  getLeaveReport
 };
