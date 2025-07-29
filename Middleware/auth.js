@@ -1,11 +1,12 @@
 const jwt = require("jsonwebtoken");
+const User = require("../Modals/User");
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   const rawHeader = req.header("Authorization");
   const token = rawHeader?.split(" ")[1];
 
   if (!token) {
-    return res.json({
+    return res.status(401).json({
       success: false,
       error: true,
       message: "Access denied. Token missing.",
@@ -15,10 +16,29 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    // ✅ Get full user details
+    const user = await User.findById(decoded.id).select("name email role");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: true,
+        message: "Invalid token. User not found.",
+        code: 401,
+      });
+    }
+
+    req.user = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
+
     next();
   } catch {
-    res.json({
+    res.status(401).json({
       success: false,
       error: true,
       message: "Invalid token",

@@ -8,20 +8,11 @@ const path = require("path");
 
 const register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      gender,
-      dob,
-      address,
-      departmentId,
-      designationId,
-      shiftId,
-      doj,
-      emergencyContact,
-    } = req.body;
+const {
+  name, email, password, phone, gender, dob, address,
+  departmentId, designationId, shiftId, doj, emergencyContact,
+  pan, bankAccount   // ✅ Add these
+} = req.body;
 
     const emailExists = await pendingTbl.findOne({ email }) || await userTbl.findOne({ email });
     if (emailExists) {
@@ -56,22 +47,24 @@ const register = async (req, res) => {
       profilePic = `profiles/${filename}`;
     }
 
-    // Create pending user
-    const pendingUser = new pendingTbl({
-      name,
-      email,
-      password,
-      phone,
-      gender,
-      dob,
-      address,
-      departmentId,
-      designationId,
-      shiftId,
-      doj,
-      emergencyContact: JSON.parse(emergencyContact),
-      profilePic: profilePic || null
-    });
+const pendingUser = new pendingTbl({
+  name,
+  email,
+  password,
+  phone,
+  gender,
+  dob,
+  address,
+  departmentId,
+  designationId,
+  shiftId,
+  doj,
+  emergencyContact: JSON.parse(emergencyContact),
+  profilePic: profilePic || null,
+  pan,             // ✅
+  bankAccount      // ✅
+});
+
 
     await pendingUser.save();
 
@@ -239,6 +232,7 @@ const getAllUsers = async (req, res) => {
       .populate("departmentId", "name")
       .populate("designationId", "name")
       .populate("shiftId", "name");
+
     res.json({ success: true, error: false, message: "Users fetched", code: 200, data: users });
   } catch (err) {
     res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
@@ -279,7 +273,6 @@ const updateUser = async (req, res) => {
   }
 };
 
-// 🔹 Delete Employee
 const deleteUser = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.json({ success: false, error: true, message: "Access denied", code: 403 });

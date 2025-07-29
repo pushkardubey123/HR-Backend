@@ -25,6 +25,8 @@ const UserSchema = new mongoose.Schema(
   type: Number,
   default: 0,
 },
+pan: { type: String },
+bankAccount: { type: String },
     emergencyContact: {
       name: String,
       phone: String,

@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const Project = require("../Modals/Project");
 const sendNotification = require("./sendNotification");
+const Notification = require("../Modals/Notification"); // Notification model add करो
 
 const checkTaskDeadlines = async () => {
   try {
@@ -18,21 +19,34 @@ const checkTaskDeadlines = async () => {
 
         if (dueDate <= today) {
           for (const assignee of task.assignedTo) {
-            await sendNotification({
-              title: dueStr === todayStr ? "Task Due Today" : "Task Overdue",
-              message: `Task "${task.title}" in project "${project.name}" is ${
-                dueStr === todayStr ? "due today" : `overdue (was due on ${dueStr})`
-              }.`,
+            // ✅ Check if a notification already exists for this user and task
+            const alreadyNotified = await Notification.findOne({
               recipient: assignee._id,
+              "meta.taskId": task._id, // optional tracking
               type: "task",
-              sendEmailFlag: false,
             });
+
+            if (!alreadyNotified) {
+              await sendNotification({
+                title: dueStr === todayStr ? "Task Due Today" : "Task Overdue",
+                message: `Task "${task.title}" in project "${project.name}" is ${
+                  dueStr === todayStr ? "due today" : `overdue (was due on ${dueStr})`
+                }.`,
+                recipient: assignee._id,
+                type: "task",
+                sendEmailFlag: false,
+                meta: {
+                  taskId: task._id, // ✅ extra info for future filters
+                  projectId: project._id,
+                },
+              });
+            }
           }
         }
       }
     }
   } catch (err) {
-     res.json({ success: false, error: true, message: "ask Deadline Reminder Error", code: 500 });
+    console.error("Task Deadline Reminder Error:", err);
   }
 };
 
@@ -40,3 +54,4 @@ cron.schedule("0 10 * * *", checkTaskDeadlines);
 checkTaskDeadlines();
 
 module.exports = checkTaskDeadlines;
+ 

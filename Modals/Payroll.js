@@ -14,6 +14,14 @@ const payrollSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  workingDays: {
+  type: Number,
+  default: 0,
+},
+paidDays: {
+  type: Number,
+  default: 0,
+},
   allowances: [
     {
       title: String,

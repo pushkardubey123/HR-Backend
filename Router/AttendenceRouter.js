@@ -9,6 +9,8 @@ const {
   getAttendanceByEmployee,
   updateAttendance,
   deleteAttendance,
+  bulkMarkAttendance,
+  getMonthlyAttendance,
 } = require("../Controllers/AttendenceController");
 
 
@@ -18,5 +20,9 @@ router.get("/", auth, getAllAttendance);
 router.get("/employee/:id", auth, getAttendanceByEmployee);
 router.put("/:id", auth, updateAttendance);
 router.delete("/:id", auth, deleteAttendance);
+router.post("/bulk", auth, bulkMarkAttendance); 
+router.get("/monthly", auth, getMonthlyAttendance);
+
+
 
 module.exports = router;
