@@ -1,0 +1,14 @@
+const { google } = require("googleapis");
+require("dotenv").config();
+
+const oAuth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.REDIRECT_URI
+);
+
+oAuth2Client.setCredentials({ refresh_token: process.env.REFRESH_TOKEN });
+
+const calendar = google.calendar({ version: "v3", auth: oAuth2Client });
+
+module.exports = calendar;

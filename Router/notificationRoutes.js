@@ -6,13 +6,11 @@ const verifyToken = require("../Middleware/auth");
 const {
   getMyNotifications,
   markAsRead,
-  clearAll,
   sendCustomNotification,
   getAdminAlerts,
   deleteNotification,
   getAllNotification,
   getEmployeeNotifications,
-  removeFromBell,
   clearBellNotifications,
 } = require("../Controllers/notificationController");
 

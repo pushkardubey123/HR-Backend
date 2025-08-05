@@ -44,7 +44,7 @@ app.use("/api", require("./Router/workFromHomeRoutes"));
 app.use(require("./Router/userRouter"));
 app.use("/api/timesheet", timesheetRoutes);
 app.use("/api/events", require("./Router/eventRoutes"));
-
+app.use("/api/meeting", require("./Router/meetingRoutes"));
 require("./utils/taskDeadlineNotifier")();
 require("./utils/birthdayAnniversaryNotifier")();
 
