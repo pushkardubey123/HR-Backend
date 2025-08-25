@@ -11,7 +11,7 @@ const register = async (req, res) => {
 const {
   name, email, password, phone, gender, dob, address,
   departmentId, designationId, shiftId, doj, emergencyContact,
-  pan, bankAccount   // ✅ Add these
+  pan, bankAccount  
 } = req.body;
 
     const emailExists = await pendingTbl.findOne({ email }) || await userTbl.findOne({ email });
@@ -61,8 +61,8 @@ const pendingUser = new pendingTbl({
   doj,
   emergencyContact: JSON.parse(emergencyContact),
   profilePic: profilePic || null,
-  pan,             // ✅
-  bankAccount      // ✅
+  pan,             
+  bankAccount    
 });
 
 
@@ -300,6 +300,75 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const getBirthdaysAndAnniversaries = async (req, res) => {
+  try {
+    const users = await userTbl.find({ role: "employee", status: "active" });
+
+    const today = new Date();
+    const todayMonthDay = `${today.getMonth() + 1}-${today.getDate()}`; // "MM-DD"
+
+    const birthdays = [];
+    const anniversaries = [];
+
+    users.forEach(user => {
+      const dob = new Date(user.dob);
+      const doj = new Date(user.doj);
+
+      const dobMonthDay = `${dob.getMonth() + 1}-${dob.getDate()}`;
+      const dojMonthDay = `${doj.getMonth() + 1}-${doj.getDate()}`;
+
+      if (dobMonthDay === todayMonthDay) {
+        birthdays.push(user);
+      }
+      if (dojMonthDay === todayMonthDay) {
+        anniversaries.push(user);
+      }
+    });
+
+    res.json({
+      success: true,
+      message: "Birthdays and anniversaries fetched",
+      code: 200,
+      data: {
+        birthdays,
+        anniversaries
+      }
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      code: 500
+    });
+  }
+};
+
+// 👇 Controllers/UserController.js ke andar
+
+const getAllEmployeeDates = async (req, res) => {
+  try {
+    const employees = await userTbl.find(
+      { role: "employee" },
+      "name dob doj" // 👈 Sirf ye fields chahiye
+    );
+
+    res.json({
+      success: true,
+      message: "Employee DOB and DOJ list fetched",
+      code: 200,
+      data: employees,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee DOB and DOJ",
+      code: 500,
+      error: true,
+    });
+  }
+};
+
+
 module.exports = {
   register,
   login,
@@ -312,5 +381,7 @@ module.exports = {
   userVerifyPassword,
   getPendingUsers,
   approvePendingUser,
-  rejectPendingUser
+  rejectPendingUser,
+  getBirthdaysAndAnniversaries,
+  getAllEmployeeDates
 };

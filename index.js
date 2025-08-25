@@ -42,9 +42,12 @@ app.use("/mail", require("./Router/mailRoutes"));
 app.use("/api/settings", require("./Router/settingsRoute"));
 app.use("/api", require("./Router/workFromHomeRoutes"));
 app.use(require("./Router/userRouter"));
+app.use("/api/applications", require("./Router/applicationRoutes"));
+app.use("/api/interviews", require("./Router/interviewRoutes"));
 app.use("/api/timesheet", timesheetRoutes);
 app.use("/api/events", require("./Router/eventRoutes"));
 app.use("/api/meeting", require("./Router/meetingRoutes"));
+app.use("/api/jobs", require("./Router/jobRoutes"));
 require("./utils/taskDeadlineNotifier")();
 require("./utils/birthdayAnniversaryNotifier")();
 

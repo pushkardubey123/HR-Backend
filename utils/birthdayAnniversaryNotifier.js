@@ -34,12 +34,11 @@ const birthdayAndAnniversaryCheck = async () => {
         });
       }
     }
-  } catch {
+  } catch (err) {
      res.json({ success: false, error: true, message: "Birthday/Anniversary Error:", code: 500 });
   }
 };
 
-// 🔁 Run every day at 9 AM
 cron.schedule("0 9 * * *", birthdayAndAnniversaryCheck);
 
 module.exports = birthdayAndAnniversaryCheck;

@@ -1,5 +1,3 @@
-// models/WorkFromHome.js
-
 const mongoose = require("mongoose");
 
 const WorkFromHomeSchema = new mongoose.Schema(
