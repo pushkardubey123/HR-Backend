@@ -39,7 +39,6 @@ app.use("/api/exit", require("./Router/exitRoutes"));
 app.use("/api/reports", require("./Router/reportRoutes"));
 app.use("/api/notifications", require("./Router/notificationRoutes"));
 app.use("/mail", require("./Router/mailRoutes"));
-app.use("/api/settings", require("./Router/settingsRoute"));
 app.use("/api", require("./Router/workFromHomeRoutes"));
 app.use(require("./Router/userRouter"));
 app.use("/api/applications", require("./Router/applicationRoutes"));
