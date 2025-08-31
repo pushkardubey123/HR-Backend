@@ -4,26 +4,34 @@ const documentSchema = new mongoose.Schema({
   employeeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
   },
   documentType: {
     type: String,
     required: true,
-    enum: ["Aadhaar", "PAN", "Resume", "Offer Letter", "Experience Letter", "Bank Details", "Others"]
+    enum: [
+      "Aadhaar",
+      "PAN",
+      "Resume",
+      "Offer Letter",
+      "Experience Letter",
+      "Bank Details",
+      "Others",
+    ],
   },
   fileUrl: {
     type: String,
-    required: true
+    required: true,
   },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
   },
   uploadedAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
 module.exports = mongoose.model("Document", documentSchema);

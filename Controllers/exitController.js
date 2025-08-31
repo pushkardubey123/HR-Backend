@@ -12,7 +12,11 @@ const createExitRequest = async (req, res) => {
     });
 
     await newRequest.save();
-    res.json({ success: true, message: "Exit request submitted", data: newRequest });
+    res.json({
+      success: true,
+      message: "Exit request submitted",
+      data: newRequest,
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
@@ -25,7 +29,9 @@ const getAllExitRequests = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json({ success: true, data: requests });
   } catch {
-    res.status(500).json({ success: false, message: "Failed to fetch requests" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch requests" });
   }
 };
 
@@ -44,11 +50,15 @@ const updateExitRequestByAdmin = async (req, res) => {
     const { id } = req.params;
     const { interviewFeedback, clearanceStatus, finalSettlement } = req.body;
 
-    const updated = await ExitRequest.findByIdAndUpdate(id, {
-      interviewFeedback,
-      clearanceStatus,
-      finalSettlement,
-    }, { new: true });
+    const updated = await ExitRequest.findByIdAndUpdate(
+      id,
+      {
+        interviewFeedback,
+        clearanceStatus,
+        finalSettlement,
+      },
+      { new: true }
+    );
 
     res.json({ success: true, message: "Exit request updated", data: updated });
   } catch {
@@ -61,7 +71,12 @@ const deleteExitRequest = async (req, res) => {
     const { id } = req.params;
     const request = await ExitRequest.findById(id);
     if (!request || request.clearanceStatus !== "pending") {
-      return res.status(400).json({ success: false, message: "Only pending requests can be deleted" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Only pending requests can be deleted",
+        });
     }
 
     await ExitRequest.findByIdAndDelete(id);
@@ -76,5 +91,5 @@ module.exports = {
   getAllExitRequests,
   getExitRequestsByEmployee,
   updateExitRequestByAdmin,
-  deleteExitRequest
+  deleteExitRequest,
 };

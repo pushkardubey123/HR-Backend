@@ -1,4 +1,3 @@
-// utils/birthdayReminder.js
 const cron = require("node-cron");
 const User = require("../Modals/User");
 const sendNotification = require("./sendNotification");
@@ -16,17 +15,16 @@ const birthdayAndAnniversaryCheck = async () => {
       const doj = new Date(user.doj);
       if (dob.getMonth() === todayMonth && dob.getDate() === todayDate) {
         await sendNotification({
-          title: "🎂 Happy Birthday!",
+          title: "Happy Birthday!",
           message: `Wish you a wonderful birthday, ${user.name}!`,
           recipient: user._id,
           type: "birthday",
         });
       }
 
-      // 🎉 Work Anniversary
       if (doj.getMonth() === todayMonth && doj.getDate() === todayDate) {
         await sendNotification({
-          title: "🎉 Work Anniversary",
+          title: "Work Anniversary",
           message: `Congratulations on your work anniversary, ${user.name}!`,
           recipient: user._id,
           type: "anniversary",
@@ -35,7 +33,12 @@ const birthdayAndAnniversaryCheck = async () => {
       }
     }
   } catch (err) {
-     res.json({ success: false, error: true, message: "Birthday/Anniversary Error:", code: 500 });
+    res.json({
+      success: false,
+      error: true,
+      message: "Birthday/Anniversary Error:",
+      code: 500,
+    });
   }
 };
 

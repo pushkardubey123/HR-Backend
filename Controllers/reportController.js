@@ -1,6 +1,4 @@
-// /Controllers/reportController.js
 const Report = require("../Modals/Reports");
-const generateReport = require("../utils/generateReport");
 const PDFDocument = require("pdfkit");
 const Attendance = require("../Modals/Attendence");
 const Leave = require("../Modals/Leave");
@@ -15,21 +13,17 @@ const streamReportDirectly = (res, type, data) => {
   res.setHeader("Content-Disposition", `inline; filename=${type}_report.pdf`);
 
   doc.pipe(res);
-
-  // Heading
   doc
     .fillColor("#1F4E79")
     .fontSize(20)
     .text(`${type.toUpperCase()} REPORT`, { align: "center" })
     .moveDown();
-
-  // Table headers
   const headingsMap = {
     attendance: ["#", "Name", "Email", "Date", "Status"],
     leaves: ["#", "Name", "Email", "Leave Type", "Start", "End", "Status"],
     users: ["#", "Name", "Email", "Phone", "Department"],
     exit: ["#", "Name", "Email", "Reason", "Date", "Status"],
-    projects: ["#", "Name", "Status", "Start", "End", "Total Tasks"]
+    projects: ["#", "Name", "Status", "Start", "End", "Total Tasks"],
   };
 
   const headers = headingsMap[type] || [];
@@ -58,11 +52,14 @@ const streamReportDirectly = (res, type, data) => {
 
 const generateDynamicReport = async (req, res) => {
   try {
-    const { type } = req.query; // 🟡 use query for GET
+    const { type } = req.query;
     let data = [];
 
     if (type === "attendance") {
-      const attendance = await Attendance.find().populate("employeeId", "name email");
+      const attendance = await Attendance.find().populate(
+        "employeeId",
+        "name email"
+      );
       data = attendance.map((a) => ({
         name: a.employeeId?.name || "-",
         email: a.employeeId?.email || "-",
@@ -80,7 +77,10 @@ const generateDynamicReport = async (req, res) => {
         status: l.status,
       }));
     } else if (type === "users") {
-      const users = await User.find({ role: "employee" }).populate("departmentId", "name");
+      const users = await User.find({ role: "employee" }).populate(
+        "departmentId",
+        "name"
+      );
       data = users.map((u) => ({
         name: u.name,
         email: u.email,
@@ -106,15 +106,16 @@ const generateDynamicReport = async (req, res) => {
         tasks: p.tasks.length,
       }));
     } else {
-      return res.status(400).json({ success: false, message: "Invalid report type" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid report type" });
     }
 
     streamReportDirectly(res, type, data);
-  } catch  {
+  } catch {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
 
 const getReports = async (req, res) => {
   try {
@@ -137,11 +138,12 @@ const getReports = async (req, res) => {
     }));
 
     res.json({ success: true, data: formattedReports });
-  } catch  {
-     res.status(500).json({ success: false, message: "Failed to fetch reports" });
+  } catch {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch reports" });
   }
 };
-
 
 const getDashboardAnalytics = async (req, res) => {
   try {
@@ -177,7 +179,7 @@ const getDashboardAnalytics = async (req, res) => {
         exitRequests: exitCount,
       },
     });
-  } catch  {
+  } catch {
     res.status(500).json({ success: false, message: "Analytics error" });
   }
 };
@@ -186,5 +188,5 @@ module.exports = {
   generateDynamicReport,
   getReports,
   getDashboardAnalytics,
-  streamReportDirectly
+  streamReportDirectly,
 };

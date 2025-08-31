@@ -6,17 +6,35 @@ const moment = require("moment");
 
 exports.scheduleInterview = async (req, res) => {
   try {
-    const { applicationId, title, description, date, startTime, endTime, mode, location } = req.body;
+    const {
+      applicationId,
+      title,
+      description,
+      date,
+      startTime,
+      endTime,
+      mode,
+      location,
+    } = req.body;
     const createdBy = req.user._id;
 
-    const application = await Application.findById(applicationId).populate("jobId");
-    if (!application) return res.status(404).json({ message: "Application not found" });
+    const application = await Application.findById(applicationId).populate(
+      "jobId"
+    );
+    if (!application)
+      return res.status(404).json({ message: "Application not found" });
 
     const candidateEmail = application.email;
     const candidateName = application.name;
 
-    const startDateTime = moment(`${date} ${startTime}`, "YYYY-MM-DD HH:mm").toISOString();
-    const endDateTime = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm").toISOString();
+    const startDateTime = moment(
+      `${date} ${startTime}`,
+      "YYYY-MM-DD HH:mm"
+    ).toISOString();
+    const endDateTime = moment(
+      `${date} ${endTime}`,
+      "YYYY-MM-DD HH:mm"
+    ).toISOString();
 
     const event = {
       summary: title,
@@ -57,21 +75,31 @@ exports.scheduleInterview = async (req, res) => {
 
     await interview.save();
 
-    // Application status update
     application.status = "interview_scheduled";
     await application.save();
 
-    // Email to candidate
-    sendEmail(candidateEmail, title, description, startDateTime, endDateTime, googleMeetLink);
+    sendEmail(
+      candidateEmail,
+      title,
+      description,
+      startDateTime,
+      endDateTime,
+      googleMeetLink
+    );
 
-    res.status(201).json({ success: true, message: "Interview scheduled successfully", interview });
+    res
+      .status(201)
+      .json({
+        success: true,
+        message: "Interview scheduled successfully",
+        interview,
+      });
   } catch (error) {
     console.error("Error scheduling interview:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
-// 📌 Send Email
 const sendEmail = (to, title, description, start, end, meetLink) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -102,38 +130,53 @@ const sendEmail = (to, title, description, start, end, meetLink) => {
 
 exports.getAllInterviews = async (req, res) => {
   try {
-    const interviews = await Interview.find()
-      .populate("applicationId jobId createdBy");
+    const interviews = await Interview.find().populate(
+      "applicationId jobId createdBy"
+    );
     res.status(200).json({ success: true, interviews });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching interviews", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching interviews", error });
   }
 };
 
-// 📌 Get Interview By ID
 exports.getInterviewById = async (req, res) => {
   try {
-    const interview = await Interview.findById(req.params.id)
-      .populate("applicationId jobId createdBy");
-    if (!interview) return res.status(404).json({ success: false, message: "Interview not found" });
+    const interview = await Interview.findById(req.params.id).populate(
+      "applicationId jobId createdBy"
+    );
+    if (!interview)
+      return res
+        .status(404)
+        .json({ success: false, message: "Interview not found" });
     res.status(200).json({ success: true, interview });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching interview", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching interview", error });
   }
 };
 
-// 📌 Update Interview
 exports.updateInterview = async (req, res) => {
   try {
-    const { title, description, date, startTime, endTime, mode, location } = req.body;
+    const { title, description, date, startTime, endTime, mode, location } =
+      req.body;
 
     const interview = await Interview.findById(req.params.id);
-    if (!interview) return res.status(404).json({ success: false, message: "Interview not found" });
-
-    // Google Calendar update bhi karein (agar event id saved hai)
+    if (!interview)
+      return res
+        .status(404)
+        .json({ success: false, message: "Interview not found" });
     if (interview.calendarEventId) {
-      const startDateTime = moment(`${date} ${startTime}`, "YYYY-MM-DD HH:mm").toISOString();
-      const endDateTime = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm").toISOString();
+      const startDateTime = moment(
+        `${date} ${startTime}`,
+        "YYYY-MM-DD HH:mm"
+      ).toISOString();
+      const endDateTime = moment(
+        `${date} ${endTime}`,
+        "YYYY-MM-DD HH:mm"
+      ).toISOString();
 
       await calendar.events.update({
         calendarId: "primary",
@@ -148,7 +191,6 @@ exports.updateInterview = async (req, res) => {
       });
     }
 
-    // Interview DB me update
     interview.title = title || interview.title;
     interview.description = description || interview.description;
     interview.date = date || interview.date;
@@ -158,20 +200,29 @@ exports.updateInterview = async (req, res) => {
     interview.location = location || interview.location;
 
     await interview.save();
-    res.status(200).json({ success: true, message: "Interview updated successfully", interview });
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Interview updated successfully",
+        interview,
+      });
   } catch (error) {
     console.error("Error updating interview:", error);
-    res.status(500).json({ success: false, message: "Error updating interview", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating interview", error });
   }
 };
 
-// 📌 Delete Interview
 exports.deleteInterview = async (req, res) => {
   try {
     const interview = await Interview.findById(req.params.id);
-    if (!interview) return res.status(404).json({ success: false, message: "Interview not found" });
+    if (!interview)
+      return res
+        .status(404)
+        .json({ success: false, message: "Interview not found" });
 
-    // Google Calendar se delete karo
     if (interview.calendarEventId) {
       await calendar.events.delete({
         calendarId: "primary",
@@ -181,12 +232,17 @@ exports.deleteInterview = async (req, res) => {
 
     await interview.deleteOne();
 
-    // Application ka status wapas shortlist kar do
-    await Application.findByIdAndUpdate(interview.applicationId, { status: "shortlisted" });
+    await Application.findByIdAndUpdate(interview.applicationId, {
+      status: "shortlisted",
+    });
 
-    res.status(200).json({ success: true, message: "Interview deleted successfully" });
+    res
+      .status(200)
+      .json({ success: true, message: "Interview deleted successfully" });
   } catch (error) {
     console.error("Error deleting interview:", error);
-    res.status(500).json({ success: false, message: "Error deleting interview", error });
+    res
+      .status(500)
+      .json({ success: false, message: "Error deleting interview", error });
   }
 };

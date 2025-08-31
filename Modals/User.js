@@ -22,11 +22,11 @@ const UserSchema = new mongoose.Schema(
     documents: [String],
     profilePic: String,
     basicSalary: {
-  type: Number,
-  default: 0,
-},
-pan: { type: String },
-bankAccount: { type: String },
+      type: Number,
+      default: 0,
+    },
+    pan: { type: String },
+    bankAccount: { type: String },
     emergencyContact: {
       name: String,
       phone: String,

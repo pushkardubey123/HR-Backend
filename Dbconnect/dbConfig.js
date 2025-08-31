@@ -1,11 +1,11 @@
-const mongoose=require('mongoose')
+const mongoose = require("mongoose");
 
-const dbConnect=()=>{
-    const URI=process.env.MONGO_URL
-    const con =mongoose.connect(`${URI}`)
-    if (con) {
-        console.log("Database Connected !!")
-    }
-}
+const dbConnect = () => {
+  const URI = process.env.MONGO_URL;
+  const con = mongoose.connect(`${URI}`);
+  if (con) {
+    console.log("Database Connected !!");
+  }
+};
 
-module.exports=dbConnect
+module.exports = dbConnect;

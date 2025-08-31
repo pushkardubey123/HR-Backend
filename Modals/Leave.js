@@ -2,8 +2,11 @@ const mongoose = require("mongoose");
 
 const leaveSchema = new mongoose.Schema(
   {
-    employeeId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
-,
+    employeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     leaveType: {
       type: String,
       enum: ["Casual", "Sick", "Earned"],
@@ -36,4 +39,4 @@ const leaveSchema = new mongoose.Schema(
 
 const leaveTbl = mongoose.model("Leave", leaveSchema);
 
-module.exports=leaveTbl
+module.exports = leaveTbl;

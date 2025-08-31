@@ -1,7 +1,12 @@
 const attendanceTbl = require("../Modals/Attendence");
 const mongoose = require("mongoose");
 const calculateDuration = (inTime, outTime) => {
-  if (!inTime || !outTime || typeof inTime !== "string" || typeof outTime !== "string") {
+  if (
+    !inTime ||
+    !outTime ||
+    typeof inTime !== "string" ||
+    typeof outTime !== "string"
+  ) {
     return 0;
   }
 
@@ -23,7 +28,7 @@ const getTimesheetReport = async (req, res) => {
     if (startDate && endDate) {
       filter.date = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $lte: new Date(endDate),
       };
     }
 
@@ -35,7 +40,7 @@ const getTimesheetReport = async (req, res) => {
       .find(filter)
       .populate("employeeId", "name email");
 
-    const result = records.map(record => {
+    const result = records.map((record) => {
       let totalHours = 0;
 
       for (const log of record.inOutLogs) {
@@ -49,18 +54,17 @@ const getTimesheetReport = async (req, res) => {
         employee: record.employeeId,
         date: record.date,
         hours: parseFloat(totalHours.toFixed(2)),
-        remark: record.status === "Late" ? "Late Arrival" : ""
+        remark: record.status === "Late" ? "Late Arrival" : "",
       };
     });
 
     res.status(200).json({
       success: true,
       message: "Timesheet data calculated",
-      data: result
+      data: result,
     });
-
   } catch (err) {
-    console.error("❌ Error generating timesheet:", err.message);
+    console.error("Error generating timesheet:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -69,7 +73,6 @@ const getEmployeeTimesheet = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ✅ Validate ObjectId
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
@@ -77,7 +80,8 @@ const getEmployeeTimesheet = async (req, res) => {
       });
     }
 
-    const records = await attendanceTbl.find({ employeeId: id })
+    const records = await attendanceTbl
+      .find({ employeeId: id })
       .populate("employeeId", "name");
 
     res.json({
@@ -85,7 +89,7 @@ const getEmployeeTimesheet = async (req, res) => {
       data: records,
     });
   } catch (err) {
-    console.error("❌ Timesheet error:", err);
+    console.error("Timesheet error:", err);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -94,5 +98,6 @@ const getEmployeeTimesheet = async (req, res) => {
 };
 
 module.exports = {
-  getTimesheetReport,getEmployeeTimesheet
+  getTimesheetReport,
+  getEmployeeTimesheet,
 };

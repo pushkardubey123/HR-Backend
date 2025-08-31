@@ -1,15 +1,14 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { 
-  scheduleInterview, 
-  getAllInterviews, 
-  getInterviewById, 
-  updateInterview, 
-  deleteInterview 
+const {
+  scheduleInterview,
+  getAllInterviews,
+  getInterviewById,
+  updateInterview,
+  deleteInterview,
 } = require("../Controllers/InterviewController");
-const auth = require('../Middleware/auth');
+const auth = require("../Middleware/auth");
 
-// Interview Routes
 router.post("/schedule", auth, scheduleInterview);
 router.get("/", auth, getAllInterviews);
 router.get("/:id", auth, getInterviewById);

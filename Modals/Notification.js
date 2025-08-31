@@ -6,27 +6,27 @@ const notificationSchema = new mongoose.Schema({
   recipient: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: false,  
+    required: false,
   },
   type: {
     type: String,
-    default: "custom"
+    default: "custom",
   },
   image: { type: String },
   read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   isGlobal: {
     type: Boolean,
-    default: false 
+    default: false,
   },
   removedFromBell: {
-  type: Boolean,
-  default: false,
-},meta: {
-  type: Object,
-  default: {},
-},
-
+    type: Boolean,
+    default: false,
+  },
+  meta: {
+    type: Object,
+    default: {},
+  },
 });
 
 module.exports = mongoose.model("Notification", notificationSchema);

@@ -10,7 +10,7 @@ const addDesignation = async (req, res) => {
         success: false,
         error: true,
         message: "Designation already exists in this department",
-        code: 400
+        code: 400,
       });
     }
 
@@ -23,22 +23,22 @@ const addDesignation = async (req, res) => {
         error: false,
         message: "Designation created successfully",
         code: 201,
-        data: result
+        data: result,
       });
     } else {
       res.json({
         success: false,
         error: true,
         message: "Designation creation failed",
-        code: 400
+        code: 400,
       });
     }
-  } catch  {
-      res.json({
+  } catch {
+    res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
@@ -51,14 +51,14 @@ const getDesignations = async (req, res) => {
       error: false,
       message: "Designations fetched successfully",
       code: 200,
-      data
+      data,
     });
-  } catch  {
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
@@ -78,7 +78,7 @@ const updateDesignation = async (req, res) => {
         success: false,
         error: true,
         message: "Designation not found",
-        code: 404
+        code: 404,
       });
     }
 
@@ -87,15 +87,14 @@ const updateDesignation = async (req, res) => {
       error: false,
       message: "Designation updated successfully",
       code: 200,
-      data: updated
+      data: updated,
     });
-  } catch  {
-    
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
@@ -108,7 +107,7 @@ const deleteDesignation = async (req, res) => {
         success: false,
         error: true,
         message: "Designation not found",
-        code: 404
+        code: 404,
       });
     }
 
@@ -116,17 +115,21 @@ const deleteDesignation = async (req, res) => {
       success: true,
       error: false,
       message: "Designation deleted successfully",
-      code: 200
+      code: 200,
     });
-  } catch  {
-    
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
 
-module.exports={addDesignation,getDesignations,updateDesignation,deleteDesignation}
+module.exports = {
+  addDesignation,
+  getDesignations,
+  updateDesignation,
+  deleteDesignation,
+};

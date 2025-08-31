@@ -1,46 +1,97 @@
 const Event = require("../Modals/Event");
+const User = require("../Modals/User");
 
-// Create Event
 exports.createEvent = async (req, res) => {
   try {
-    const newEvent = new Event(req.body);
-    await newEvent.save();
-    res.status(201).json({ success: true, message: "Event created", event: newEvent });
+    const {
+      title,
+      description,
+      startDate,
+      endDate,
+      color,
+      departmentId, 
+      employeeId, 
+      createdBy,
+    } = req.body;
+
+    const newEvent = new Event({
+      title,
+      description,
+      startDate,
+      endDate,
+      color,
+      departmentId,
+      employeeId,
+      createdBy,
+    });
+
+    const savedEvent = await newEvent.save();
+
+    res.status(201).json({
+      message: "Event created successfully",
+      event: savedEvent,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to create event", error: error.message });
+    console.error("Error creating event:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-// Get All Events
 exports.getAllEvents = async (req, res) => {
   try {
     const events = await Event.find()
-      .populate("employeeId", "name email")
-      .populate("departmentId", "name");
-    res.status(200).json(events);
+      .populate("createdBy", "name email")
+      .populate("departmentId", "name")
+      .populate("employeeId", "name email");
+    res.json(events);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Fetch failed", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// Update Event (reschedule or cancel)
 exports.updateEvent = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updated = await Event.findByIdAndUpdate(id, req.body, { new: true });
-    res.status(200).json({ success: true, message: "Event updated", updated });
+    const updated = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Update failed", error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
-// Delete Event
 exports.deleteEvent = async (req, res) => {
   try {
-    const { id } = req.params;
-    await Event.findByIdAndDelete(id);
-    res.status(200).json({ success: true, message: "Event deleted" });
+    await Event.findByIdAndDelete(req.params.id);
+    res.json({ message: "Event deleted" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Deletion failed", error: error.message });
+    res.status(500).json({ error: error.message });
   }
-};
+}
+
+exports.gelOneEvent = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    const employee = await User.findById(userId);
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const departmentIds = Array.isArray(employee.department)
+      ? employee.department
+      : [employee.department];
+
+    const events = await Event.find({
+      $or: [
+        { employeeId: userId },
+        { departmentId: { $in: departmentIds } },
+      ],
+    })
+      .populate("createdBy", "name")
+      .populate("departmentId", "name");
+
+    res.status(200).json(events);
+  } catch (error) {
+    console.error("Error fetching employee events:", error);
+    res.status(500).json({ error: "Failed to fetch employee events" });
+  }
+}

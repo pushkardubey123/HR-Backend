@@ -20,7 +20,6 @@ router.get("/", auth, getAllMails);
 router.get("/my-mails", auth, getMyMails);
 router.get("/download/:filename", downloadAttachment);
 
-// ✅ Trash routes
 router.get("/trash", auth, getTrashedMails);
 router.put("/trash/:id", auth, moveToTrash);
 router.put("/restore/:id", auth, restoreMail);

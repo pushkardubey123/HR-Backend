@@ -10,7 +10,7 @@ const addDepartment = async (req, res) => {
         success: false,
         error: true,
         message: "Department already exists",
-        code: 400
+        code: 400,
       });
     }
 
@@ -23,22 +23,22 @@ const addDepartment = async (req, res) => {
         error: false,
         message: "Department created successfully",
         code: 201,
-        data: result
+        data: result,
       });
     } else {
       res.json({
         success: false,
         error: true,
         message: "Department creation failed",
-        code: 400
+        code: 400,
       });
     }
-  } catch{
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
@@ -51,14 +51,14 @@ const getDepartments = async (req, res) => {
       error: false,
       message: "Departments fetched successfully",
       code: 200,
-      data
+      data,
     });
-  } catch  {
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
@@ -77,7 +77,7 @@ const updateDepartment = async (req, res) => {
         success: false,
         error: true,
         message: "Department not found",
-        code: 404
+        code: 404,
       });
     }
 
@@ -86,15 +86,14 @@ const updateDepartment = async (req, res) => {
       error: false,
       message: "Department updated successfully",
       code: 200,
-      data: updated
+      data: updated,
     });
-  } catch  {
-    
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
@@ -107,7 +106,7 @@ const deleteDepartment = async (req, res) => {
         success: false,
         error: true,
         message: "Department not found",
-        code: 404
+        code: 404,
       });
     }
 
@@ -115,17 +114,21 @@ const deleteDepartment = async (req, res) => {
       success: true,
       error: false,
       message: "Department deleted successfully",
-      code: 200
+      code: 200,
     });
-  } catch  {
-    
+  } catch {
     res.json({
       success: false,
       error: true,
       message: "Internal Server Error",
-      code: 500
+      code: 500,
     });
   }
 };
 
-module.exports={addDepartment,deleteDepartment,updateDepartment,getDepartments}
+module.exports = {
+  addDepartment,
+  deleteDepartment,
+  updateDepartment,
+  getDepartments,
+};

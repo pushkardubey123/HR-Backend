@@ -7,7 +7,7 @@ const headingsMap = {
   leaves: ["#", "Name", "Email", "Leave Type", "Start", "End", "Status"],
   users: ["#", "Name", "Email", "Phone", "Department"],
   exit: ["#", "Name", "Email", "Reason", "Date", "Status"],
-  projects: ["#", "Name", "Status", "Start", "End", "Total Tasks"]
+  projects: ["#", "Name", "Status", "Start", "End", "Total Tasks"],
 };
 
 const generateReport = async (type, data = [], filename) => {
@@ -15,22 +15,22 @@ const generateReport = async (type, data = [], filename) => {
     try {
       const doc = new PDFDocument({ margin: 30 });
 
-      const filePath = path.join( filename);
+      const filePath = path.join(filename);
       const stream = fs.createWriteStream(filePath);
       doc.pipe(stream);
 
-      // Title
       doc
         .fillColor("#1F4E79")
         .fontSize(20)
         .text(`${type.toUpperCase()} REPORT`, { align: "center" })
         .moveDown(0.5);
 
-      // Generated timestamp
       doc
         .fontSize(10)
         .fillColor("gray")
-        .text(`Generated on: ${new Date().toLocaleString()}`, { align: "right" })
+        .text(`Generated on: ${new Date().toLocaleString()}`, {
+          align: "right",
+        })
         .moveDown();
 
       const headers = headingsMap[type];
@@ -40,7 +40,6 @@ const generateReport = async (type, data = [], filename) => {
         return resolve(filePath);
       }
 
-      // Headers
       doc
         .fontSize(12)
         .fillColor("#000")
@@ -48,7 +47,6 @@ const generateReport = async (type, data = [], filename) => {
         .text(headers.join(" | "))
         .moveDown(0.5);
 
-      // Body rows
       doc.font("Helvetica").fontSize(11).fillColor("#000");
 
       data.forEach((item, i) => {

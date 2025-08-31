@@ -36,7 +36,9 @@ const updateShift = async (req, res) => {
     );
 
     if (!updated) {
-      return res.status(404).json({ success: false, message: "Shift not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shift not found" });
     }
 
     res.json({ success: true, message: "Shift updated", data: updated });
@@ -45,12 +47,13 @@ const updateShift = async (req, res) => {
   }
 };
 
-// ➤ Delete Shift
 const deleteShift = async (req, res) => {
   try {
     const deleted = await Shift.findByIdAndDelete(req.params.id);
     if (!deleted) {
-      return res.status(404).json({ success: false, message: "Shift not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Shift not found" });
     }
 
     res.json({ success: true, message: "Shift deleted" });

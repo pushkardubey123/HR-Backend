@@ -1,17 +1,18 @@
 const Notification = require("../Modals/Notification");
-const User=require("../Modals/User")
+const User = require("../Modals/User");
 const sendNotification = require("../utils/sendNotification");
 const pendingEmployee = require("../Modals/PendingUser");
 const Leave = require("../Modals/Leave");
 const Exit = require("../Modals/ExitRequest");
 const mongoose = require("mongoose");
 
-
 exports.getAdminAlerts = async (req, res) => {
   try {
     const pendingEmployees = await pendingEmployee.countDocuments();
     const pendingLeaves = await Leave.countDocuments({ status: "Pending" });
-    const pendingExits = await Exit.countDocuments({ clearanceStatus: "pending" });
+    const pendingExits = await Exit.countDocuments({
+      clearanceStatus: "pending",
+    });
     res.json({
       success: true,
       data: [
@@ -21,7 +22,9 @@ exports.getAdminAlerts = async (req, res) => {
       ],
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to fetch admin alerts" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch admin alerts" });
   }
 };
 
@@ -34,8 +37,8 @@ exports.getEmployeeNotifications = async (req, res) => {
     }
 
     const notifications = await Notification.find({
-  recipient: employeeId,
-}).sort({ createdAt: -1 });
+      recipient: employeeId,
+    }).sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (error) {
     console.error("Fetch Notifications Error:", error);
@@ -43,17 +46,16 @@ exports.getEmployeeNotifications = async (req, res) => {
   }
 };
 
-
-
-
 exports.getAllNotification = async (req, res) => {
   try {
-    const allNotifications = await Notification.find().populate("recipient", "name").sort({ createdAt: -1 });
+    const allNotifications = await Notification.find()
+      .populate("recipient", "name")
+      .sort({ createdAt: -1 });
     res.status(200).json(allNotifications);
   } catch (err) {
     res.status(500).json({ message: "Server Error" });
   }
-}
+};
 
 exports.sendCustomNotification = async (req, res) => {
   try {
@@ -61,7 +63,6 @@ exports.sendCustomNotification = async (req, res) => {
 
     let imageUrl = "";
 
-    // ✅ Image upload (if exists)
     if (req.files && req.files.image) {
       const imageFile = req.files.image;
       const fileName = `${Date.now()}_${imageFile.name}`;
@@ -71,12 +72,13 @@ exports.sendCustomNotification = async (req, res) => {
       imageUrl = `notifications/${fileName}`;
     }
 
-    // ✅ Global to all employees
     if (recipient === "all") {
       const allEmployees = await User.find({ role: "employee" }, "_id");
 
       if (!allEmployees.length) {
-        return res.status(404).json({ success: false, message: "No employees found" });
+        return res
+          .status(404)
+          .json({ success: false, message: "No employees found" });
       }
 
       const notifications = allEmployees.map((emp) => ({
@@ -96,7 +98,6 @@ exports.sendCustomNotification = async (req, res) => {
       });
     }
 
-    // ✅ Send to single employee/admin
     const notification = new Notification({
       title,
       message,
@@ -113,22 +114,25 @@ exports.sendCustomNotification = async (req, res) => {
       message: "Notification sent",
       notification,
     });
-
   } catch (err) {
     console.error("Send Notification Error:", err);
-    return res.status(500).json({ success: false, message: "Failed to send notification" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to send notification" });
   }
 };
 
 exports.getMyNotifications = async (req, res) => {
   try {
     const notifs = await Notification.find({
-  recipient: req.user.id,
-  removedFromBell: false,
-}).sort({ createdAt: -1 });
+      recipient: req.user.id,
+      removedFromBell: false,
+    }).sort({ createdAt: -1 });
     res.json({ success: true, data: notifs });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to fetch notifications" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch notifications" });
   }
 };
 
@@ -137,7 +141,9 @@ exports.markAsRead = async (req, res) => {
     await Notification.findByIdAndUpdate(req.params.id, { read: true });
     res.json({ success: true, message: "Marked as read" });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to update notification" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update notification" });
   }
 };
 
@@ -152,13 +158,18 @@ exports.clearBellNotifications = async (req, res) => {
     console.error(err);
     res.status(500).json({ success: false, message: "Server Error" });
   }
-}
+};
 
 exports.deleteNotification = async (req, res) => {
   try {
-    await Notification.findOneAndDelete({ _id: req.params.id, recipient: req.user.id });
+    await Notification.findOneAndDelete({
+      _id: req.params.id,
+      recipient: req.user.id,
+    });
     res.json({ success: true, message: "Notification deleted" });
   } catch (err) {
-    res.status(500).json({ success: false, message: "Failed to delete notification" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to delete notification" });
   }
 };

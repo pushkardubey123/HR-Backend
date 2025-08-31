@@ -7,7 +7,7 @@ const payrollSchema = new mongoose.Schema({
     required: true,
   },
   month: {
-    type: String, 
+    type: String,
     required: true,
   },
   basicSalary: {
@@ -15,13 +15,13 @@ const payrollSchema = new mongoose.Schema({
     required: true,
   },
   workingDays: {
-  type: Number,
-  default: 0,
-},
-paidDays: {
-  type: Number,
-  default: 0,
-},
+    type: Number,
+    default: 0,
+  },
+  paidDays: {
+    type: Number,
+    default: 0,
+  },
   allowances: [
     {
       title: String,
@@ -45,7 +45,7 @@ paidDays: {
   },
   generatedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", 
+    ref: "User",
   },
   createdAt: {
     type: Date,

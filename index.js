@@ -1,29 +1,32 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const dbConnect = require('./Dbconnect/dbConfig');
-const fileupload = require('express-fileupload');
-const cors = require('cors');
-const path = require('path');
+const express = require("express");
+const dotenv = require("dotenv");
+const dbConnect = require("./Dbconnect/dbConfig");
+const fileupload = require("express-fileupload");
+const cors = require("cors");
+const path = require("path");
 const timesheetRoutes = require("./Router/timesheetRoutes");
 dotenv.config();
 const app = express();
 
-app.use(cors({
-  origin: ['http://localhost:5173', 'https://hareetech.netlify.app/'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "https://hareetech.netlify.app/"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 dbConnect();
 
 app.use(express.json());
 
-
-app.use(fileupload({
-  useTempFiles: true,
-  tempFileDir: path.join(__dirname, "tmp")
-}));
+app.use(
+  fileupload({
+    useTempFiles: true,
+    tempFileDir: path.join(__dirname, "tmp"),
+  })
+);
 
 app.use("/static", express.static(path.join(__dirname, "uploads")));
 

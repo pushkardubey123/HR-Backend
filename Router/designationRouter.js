@@ -5,9 +5,8 @@ const {
   addDesignation,
   getDesignations,
   updateDesignation,
-  deleteDesignation
+  deleteDesignation,
 } = require("../Controllers/desinationController");
-
 
 router.post("/", auth, addDesignation);
 router.get("/", getDesignations);

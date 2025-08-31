@@ -1,5 +1,3 @@
-// routes/notificationRoutes.js
-
 const express = require("express");
 const router = express.Router();
 const verifyToken = require("../Middleware/auth");
@@ -18,8 +16,8 @@ router.get("/", verifyToken, getMyNotifications);
 
 router.put("/:id/read", verifyToken, markAsRead);
 
-router.put("/clear-bell", verifyToken, clearBellNotifications); 
-router.get("/employee/:employeeId",verifyToken, getEmployeeNotifications);
+router.put("/clear-bell", verifyToken, clearBellNotifications);
+router.get("/employee/:employeeId", verifyToken, getEmployeeNotifications);
 
 router.get("/admin-alerts", verifyToken, getAdminAlerts);
 router.post("/send", sendCustomNotification);

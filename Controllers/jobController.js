@@ -4,7 +4,6 @@ exports.addJob = async (req, res) => {
   try {
     const body = { ...req.body };
 
-    // convert skills (string | array) -> array
     if (typeof body.skills === "string") {
       body.skills = body.skills
         .split(",")

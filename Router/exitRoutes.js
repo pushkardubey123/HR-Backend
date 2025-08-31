@@ -5,13 +5,12 @@ const {
   getAllExitRequests,
   getExitRequestsByEmployee,
   updateExitRequestByAdmin,
-  deleteExitRequest
+  deleteExitRequest,
 } = require("../Controllers/exitController");
 
-router.post("/submit", auth, createExitRequest); // Employee submit
-router.get("/my-requests", auth, getExitRequestsByEmployee); // Employee view
-router.get("/", auth, getAllExitRequests); // Admin view all
-router.put("/:id", auth, updateExitRequestByAdmin); // Admin update
-router.delete("/:id", auth, deleteExitRequest); // Admin delete
-
+router.post("/submit", auth, createExitRequest);
+router.get("/my-requests", auth, getExitRequestsByEmployee);
+router.get("/", auth, getAllExitRequests);
+router.put("/:id", auth, updateExitRequestByAdmin);
+router.delete("/:id", auth, deleteExitRequest);
 module.exports = router;

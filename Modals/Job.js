@@ -7,12 +7,12 @@ const JobSchema = new mongoose.Schema(
     departmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Department",
-      required: true
+      required: true,
     },
     designationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Designation",
-      required: true
+      required: true,
     },
 
     positions: { type: Number, required: true, min: 1 },
@@ -35,7 +35,7 @@ const JobSchema = new mongoose.Schema(
     showCoverLetter: { type: Boolean, default: false },
     showTerms: { type: Boolean, default: false },
 
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }
 );

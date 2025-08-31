@@ -6,7 +6,7 @@ const mailSchema = new mongoose.Schema({
   subject: String,
   message: String,
   attachments: [String],
-  trashedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],      
+  trashedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   permanentlyDeletedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
 });

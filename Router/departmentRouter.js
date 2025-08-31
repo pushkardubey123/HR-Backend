@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const auth = require('../Middleware/auth');
+const auth = require("../Middleware/auth");
 const {
   addDepartment,
   getDepartments,
   updateDepartment,
-  deleteDepartment
-} = require('../Controllers/departmentController');
-
+  deleteDepartment,
+} = require("../Controllers/departmentController");
 
 router.post("/", auth, addDepartment);
 router.get("/", getDepartments);

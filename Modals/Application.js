@@ -16,7 +16,7 @@ const applicationSchema = new mongoose.Schema(
     },
     interviewMeeting: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Meeting", // 👈 Meeting Module se relation
+      ref: "Meeting",
     },
   },
   { timestamps: true }

@@ -3,7 +3,15 @@ const User = require("../Modals/User");
 
 const createPayroll = async (req, res) => {
   try {
-    const { employeeId, month, basicSalary, allowances = [], deductions = [], workingDays = 0, paidDays = 0 } = req.body;
+    const {
+      employeeId,
+      month,
+      basicSalary,
+      allowances = [],
+      deductions = [],
+      workingDays = 0,
+      paidDays = 0,
+    } = req.body;
 
     if (!employeeId || !month) {
       return res.status(400).json({
@@ -23,21 +31,27 @@ const createPayroll = async (req, res) => {
       finalBasicSalary = employee.basicSalary || 0;
     }
 
-    const totalAllowances = allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const totalDeductions = deductions.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const totalAllowances = allowances.reduce(
+      (sum, item) => sum + (item.amount || 0),
+      0
+    );
+    const totalDeductions = deductions.reduce(
+      (sum, item) => sum + (item.amount || 0),
+      0
+    );
     const netSalary = finalBasicSalary + totalAllowances - totalDeductions;
 
-const payroll = new Payroll({
-  employeeId,
-  month,
-  basicSalary: finalBasicSalary,
-  allowances,
-  deductions,
-  workingDays,
-  paidDays,
-  netSalary,
-  generatedBy: req.user.id,
-});
+    const payroll = new Payroll({
+      employeeId,
+      month,
+      basicSalary: finalBasicSalary,
+      allowances,
+      deductions,
+      workingDays,
+      paidDays,
+      netSalary,
+      generatedBy: req.user.id,
+    });
 
     const saved = await payroll.save();
 
@@ -55,18 +69,17 @@ const payroll = new Payroll({
   }
 };
 
-// ➤ Get All Payrolls
 const getAllPayrolls = async (req, res) => {
   try {
     const payrolls = await Payroll.find()
-.populate({
-  path: "employeeId",
-  select: "name email pan bankAccount departmentId designationId",
-  populate: [
-    { path: "departmentId", select: "name" },
-    { path: "designationId", select: "name" }
-  ]
-})
+      .populate({
+        path: "employeeId",
+        select: "name email pan bankAccount departmentId designationId",
+        populate: [
+          { path: "departmentId", select: "name" },
+          { path: "designationId", select: "name" },
+        ],
+      })
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -74,8 +87,7 @@ const getAllPayrolls = async (req, res) => {
       message: "Payrolls fetched successfully",
       data: payrolls,
     });
-  } catch  {
-    
+  } catch {
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -83,10 +95,12 @@ const getAllPayrolls = async (req, res) => {
   }
 };
 
-// ➤ Get Payroll by ID
 const getPayrollById = async (req, res) => {
   try {
-    const payroll = await Payroll.findById(req.params.id).populate("employeeId", "name email");
+    const payroll = await Payroll.findById(req.params.id).populate(
+      "employeeId",
+      "name email"
+    );
 
     if (!payroll) {
       return res.status(404).json({
@@ -100,7 +114,7 @@ const getPayrollById = async (req, res) => {
       message: "Payroll fetched successfully",
       data: payroll,
     });
-  } catch  {
+  } catch {
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -112,16 +126,17 @@ const getPayrollByEmployeeId = async (req, res) => {
   try {
     const employeeId = req.params.id;
 
-    const payrolls = await Payroll
-      .find({ employeeId })
-      .populate("employeeId", "name email phone");
+    const payrolls = await Payroll.find({ employeeId }).populate(
+      "employeeId",
+      "name email phone"
+    );
 
     res.status(200).json({
       success: true,
       message: "Payrolls fetched for employee",
       data: payrolls,
     });
-  } catch  {
+  } catch {
     res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -129,19 +144,40 @@ const getPayrollByEmployeeId = async (req, res) => {
   }
 };
 
-
-// ➤ Update Payroll
 const updatePayroll = async (req, res) => {
   try {
-const { employeeId, month, basicSalary, allowances = [], deductions = [], workingDays = 0, paidDays = 0 } = req.body;
+    const {
+      employeeId,
+      month,
+      basicSalary,
+      allowances = [],
+      deductions = [],
+      workingDays = 0,
+      paidDays = 0,
+    } = req.body;
 
-    const totalAllowances = allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const totalDeductions = deductions.reduce((sum, item) => sum + (item.amount || 0), 0);
+    const totalAllowances = allowances.reduce(
+      (sum, item) => sum + (item.amount || 0),
+      0
+    );
+    const totalDeductions = deductions.reduce(
+      (sum, item) => sum + (item.amount || 0),
+      0
+    );
     const netSalary = basicSalary + totalAllowances - totalDeductions;
 
     const updated = await Payroll.findByIdAndUpdate(
       req.params.id,
-      { employeeId, month, basicSalary, allowances, deductions, netSalary,workingDays,paidDays },
+      {
+        employeeId,
+        month,
+        basicSalary,
+        allowances,
+        deductions,
+        netSalary,
+        workingDays,
+        paidDays,
+      },
       { new: true }
     );
 
@@ -157,8 +193,8 @@ const { employeeId, month, basicSalary, allowances = [], deductions = [], workin
       message: "Payroll updated successfully",
       data: updated,
     });
-  } catch  {
-       res.status(500).json({
+  } catch {
+    res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
@@ -180,8 +216,8 @@ const deletePayroll = async (req, res) => {
       success: true,
       message: "Payroll deleted successfully",
     });
-  } catch  {
-       res.status(500).json({
+  } catch {
+    res.status(500).json({
       success: false,
       message: "Internal Server Error",
     });
@@ -194,5 +230,5 @@ module.exports = {
   getPayrollById,
   updatePayroll,
   deletePayroll,
-  getPayrollByEmployeeId
+  getPayrollByEmployeeId,
 };

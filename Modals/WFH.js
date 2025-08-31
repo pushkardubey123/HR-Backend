@@ -33,3 +33,4 @@ const WorkFromHomeSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("WorkFromHome", WorkFromHomeSchema);
+

@@ -1,9 +1,9 @@
 const WorkFromHome = require("../Modals/WFH");
 const User = require("../Modals/User");
 
-const adminAssignWFH=async (req, res) => {
+const adminAssignWFH = async (req, res) => {
   try {
-    const { employeeId, fromDate, toDate, remarks,reason } = req.body;
+    const { employeeId, fromDate, toDate, remarks, reason } = req.body;
     const user = await User.findById(employeeId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -40,17 +40,17 @@ const applyWFH = async (req, res) => {
   }
 };
 
-// 👤 Get own WFH
 const getMyWFH = async (req, res) => {
   try {
-    const data = await WorkFromHome.find({ userId: req.user.id }).sort({ createdAt: -1 });
+    const data = await WorkFromHome.find({ userId: req.user.id }).sort({
+      createdAt: -1,
+    });
     res.json({ success: true, data });
   } catch {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// 👨‍💼 Admin - Get all WFH requests
 const getAllWFH = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ success: false, message: "Access denied" });
@@ -66,7 +66,6 @@ const getAllWFH = async (req, res) => {
   }
 };
 
-// 👨‍💼 Admin - Approve or Reject
 const updateWFHStatus = async (req, res) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ success: false, message: "Access denied" });
@@ -93,5 +92,5 @@ module.exports = {
   getMyWFH,
   getAllWFH,
   updateWFHStatus,
-  adminAssignWFH
+  adminAssignWFH,
 };

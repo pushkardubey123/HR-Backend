@@ -2,7 +2,7 @@ const sendEmail = require("../utils/sendEmail");
 const MailModel = require("../Modals/Mail");
 const path = require("path");
 const fs = require("fs");
-const userTbl=require("../Modals/User")
+const userTbl = require("../Modals/User");
 
 const sendMail = async (req, res) => {
   try {
@@ -30,9 +30,7 @@ const sendMail = async (req, res) => {
   </div>
 `;
 
-
-await sendEmail(to, subject, html, attachments, req.user.name);
-
+    await sendEmail(to, subject, html, attachments, req.user.name);
 
     await MailModel.create({
       sender: req.user.id,
@@ -59,11 +57,13 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-
 const moveToTrash = async (req, res) => {
   try {
     const mail = await MailModel.findById(req.params.id);
-    if (!mail) return res.status(404).json({ success: false, message: "Mail not found" });
+    if (!mail)
+      return res
+        .status(404)
+        .json({ success: false, message: "Mail not found" });
 
     if (!mail.trashedBy.includes(req.user.id)) {
       mail.trashedBy.push(req.user.id);
@@ -85,13 +85,10 @@ const getTrashedMails = async (req, res) => {
     const mails = await MailModel.find({
       trashedBy: userId,
       permanentlyDeletedBy: { $ne: userId },
-      $or: [
-        { sender: userId },
-        { recipients: { $in: [userEmail] } }
-      ]
+      $or: [{ sender: userId }, { recipients: { $in: [userEmail] } }],
     })
-    .populate("sender", "name email")
-    .sort({ createdAt: -1 });
+      .populate("sender", "name email")
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, data: mails });
   } catch (err) {
@@ -100,21 +97,22 @@ const getTrashedMails = async (req, res) => {
   }
 };
 
-
 const restoreMail = async (req, res) => {
   try {
     const mail = await MailModel.findById(req.params.id);
-    if (!mail) return res.status(404).json({ success: false, message: "Mail not found" });
+    if (!mail)
+      return res
+        .status(404)
+        .json({ success: false, message: "Mail not found" });
 
-    // Ensure to remove the current userId from trashedBy array
-    const before = mail.trashedBy.map(id => id.toString());
+    const before = mail.trashedBy.map((id) => id.toString());
     mail.trashedBy = mail.trashedBy.filter(
-      id => id.toString() !== req.user.id.toString()
+      (id) => id.toString() !== req.user.id.toString()
     );
 
     await mail.save();
 
-    const after = mail.trashedBy.map(id => id.toString());
+    const after = mail.trashedBy.map((id) => id.toString());
 
     console.log("RESTORE DEBUG:", { before, after, current: req.user.id });
 
@@ -128,23 +126,32 @@ const restoreMail = async (req, res) => {
 const deleteMailPermanently = async (req, res) => {
   try {
     const mail = await MailModel.findById(req.params.id);
-    if (!mail) return res.status(404).json({ success: false, message: "Mail not found" });
+    if (!mail)
+      return res
+        .status(404)
+        .json({ success: false, message: "Mail not found" });
 
     if (!mail.permanentlyDeletedBy.includes(req.user.id)) {
       mail.permanentlyDeletedBy.push(req.user.id);
     }
 
-    mail.trashedBy = mail.trashedBy.filter(id => id.toString() !== req.user.id);
-    
+    mail.trashedBy = mail.trashedBy.filter(
+      (id) => id.toString() !== req.user.id
+    );
+
     await mail.save();
 
-    res.json({ success: true, message: "Mail permanently removed from your account" });
+    res.json({
+      success: true,
+      message: "Mail permanently removed from your account",
+    });
   } catch (err) {
     console.error("Permanent delete error:", err);
-    res.status(500).json({ success: false, message: "Permanent delete failed" });
+    res
+      .status(500)
+      .json({ success: false, message: "Permanent delete failed" });
   }
 };
-
 
 const getAllMails = async (req, res) => {
   try {
@@ -155,8 +162,8 @@ const getAllMails = async (req, res) => {
     const adminId = req.user.id;
 
     const mails = await MailModel.find({
-      trashedBy: { $ne: adminId },                  
-      permanentlyDeletedBy: { $ne: adminId }   
+      trashedBy: { $ne: adminId },
+      permanentlyDeletedBy: { $ne: adminId },
     })
       .populate("sender", "name email")
       .sort({ createdAt: -1 });
@@ -168,7 +175,6 @@ const getAllMails = async (req, res) => {
   }
 };
 
-
 const getMyMails = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -177,21 +183,16 @@ const getMyMails = async (req, res) => {
     const mails = await MailModel.find({
       trashedBy: { $ne: userId },
       permanentlyDeletedBy: { $ne: userId },
-      $or: [
-        { sender: userId },
-        { recipients: { $in: [userEmail] } }
-      ]
+      $or: [{ sender: userId }, { recipients: { $in: [userEmail] } }],
     })
-    .populate("sender", "name email")
-    .sort({ createdAt: -1 });
+      .populate("sender", "name email")
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, data: mails });
   } catch (err) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-
-
 
 const downloadAttachment = (req, res) => {
   const filename = req.params.filename;
@@ -213,5 +214,5 @@ module.exports = {
   getTrashedMails,
   moveToTrash,
   restoreMail,
-  getAllUsers
-}; 
+  getAllUsers,
+};

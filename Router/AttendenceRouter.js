@@ -4,7 +4,7 @@ const auth = require("../Middleware/auth");
 
 const {
   markAttendance,
-  markSession, 
+  markSession,
   getAllAttendance,
   getAttendanceByEmployee,
   updateAttendance,
@@ -13,16 +13,13 @@ const {
   getMonthlyAttendance,
 } = require("../Controllers/AttendenceController");
 
-
 router.post("/mark", auth, markAttendance);
-router.post("/session", auth, markSession); 
+router.post("/session", auth, markSession);
 router.get("/", auth, getAllAttendance);
 router.get("/employee/:id", auth, getAttendanceByEmployee);
 router.put("/:id", auth, updateAttendance);
 router.delete("/:id", auth, deleteAttendance);
-router.post("/bulk", auth, bulkMarkAttendance); 
+router.post("/bulk", auth, bulkMarkAttendance);
 router.get("/monthly", auth, getMonthlyAttendance);
-
-
 
 module.exports = router;

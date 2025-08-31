@@ -8,15 +8,33 @@ const path = require("path");
 
 const register = async (req, res) => {
   try {
-const {
-  name, email, password, phone, gender, dob, address,
-  departmentId, designationId, shiftId, doj, emergencyContact,
-  pan, bankAccount  
-} = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      gender,
+      dob,
+      address,
+      departmentId,
+      designationId,
+      shiftId,
+      doj,
+      emergencyContact,
+      pan,
+      bankAccount,
+    } = req.body;
 
-    const emailExists = await pendingTbl.findOne({ email }) || await userTbl.findOne({ email });
+    const emailExists =
+      (await pendingTbl.findOne({ email })) ||
+      (await userTbl.findOne({ email }));
     if (emailExists) {
-      return res.json({ success: false, error: true, message: "Email already exists", code: 400 });
+      return res.json({
+        success: false,
+        error: true,
+        message: "Email already exists",
+        code: 400,
+      });
     }
 
     let profilePic = null;
@@ -39,7 +57,7 @@ const {
             success: false,
             code: 500,
             message: "Error during file uploading",
-            error: true
+            error: true,
           });
         }
       });
@@ -47,41 +65,40 @@ const {
       profilePic = `profiles/${filename}`;
     }
 
-const pendingUser = new pendingTbl({
-  name,
-  email,
-  password,
-  phone,
-  gender,
-  dob,
-  address,
-  departmentId,
-  designationId,
-  shiftId,
-  doj,
-  emergencyContact: JSON.parse(emergencyContact),
-  profilePic: profilePic || null,
-  pan,             
-  bankAccount    
-});
-
+    const pendingUser = new pendingTbl({
+      name,
+      email,
+      password,
+      phone,
+      gender,
+      dob,
+      address,
+      departmentId,
+      designationId,
+      shiftId,
+      doj,
+      emergencyContact: JSON.parse(emergencyContact),
+      profilePic: profilePic || null,
+      pan,
+      bankAccount,
+    });
 
     await pendingUser.save();
 
     res.json({
       success: true,
       message: "Registration pending admin approval",
-      code: 201
+      code: 201,
     });
-  } catch  {
+  } catch {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
 
-
 const getPendingUsers = async (req, res) => {
   try {
-    const users = await pendingTbl.find()
+    const users = await pendingTbl
+      .find()
       .populate("departmentId", "name")
       .populate("designationId", "name")
       .populate("shiftId", "name");
@@ -93,7 +110,7 @@ const getPendingUsers = async (req, res) => {
       code: 200,
       data: users,
     });
-  } catch  {
+  } catch {
     res.status(500).json({
       success: false,
       error: true,
@@ -108,18 +125,19 @@ const approvePendingUser = async (req, res) => {
     const pendingUser = await pendingTbl.findById(req.params.id);
     const { basicSalary } = req.body;
     if (!pendingUser) {
-      return res.status(404).json({ success: false, message: "Pending user not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Pending user not found" });
     }
 
     const hashedPassword = await bcrypt.hash(pendingUser.password, 10);
 
     const user = new userTbl({
-  ...pendingUser.toObject(),
-  passwordHash: hashedPassword,
-  role: "employee",
-  basicSalary: basicSalary || 0
-});
-
+      ...pendingUser.toObject(),
+      passwordHash: hashedPassword,
+      role: "employee",
+      basicSalary: basicSalary || 0,
+    });
 
     await user.save();
     await pendingTbl.findByIdAndDelete(req.params.id);
@@ -134,10 +152,11 @@ const rejectPendingUser = async (req, res) => {
   try {
     const user = await pendingTbl.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "Pending user not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Pending user not found" });
     }
 
-    // 🧹 Delete profile image from server
     if (user.profilePic) {
       const imagePath = path.join(__dirname, "..", "uploads", user.profilePic);
       if (fs.existsSync(imagePath)) {
@@ -157,34 +176,60 @@ const login = async (req, res) => {
     const { email, password } = req.body;
     const user = await userTbl.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return res.json({ success: false, error: true, message: "Invalid credentials", code: 400 });
+      return res.json({
+        success: false,
+        error: true,
+        message: "Invalid credentials",
+        code: 400,
+      });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
     res.json({
-      success: true, error: false, message: "Login successful", code: 200,
+      success: true,
+      error: false,
+      message: "Login successful",
+      code: 200,
       token,
       data: {
-        id: user._id, name: user.name, email: user.email, role: user.role,
-        profilePic: user.profilePic, phone: user.phone, departmentId: user.departmentId,
-        designationId: user.designationId, shiftId: user.shiftId, status: user.status,
-      }
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic,
+        phone: user.phone,
+        departmentId: user.departmentId,
+        designationId: user.designationId,
+        shiftId: user.shiftId,
+        status: user.status,
+      },
     });
   } catch {
-    res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
+    res.json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+      code: 500,
+    });
   }
 };
 
-const userForgetPassword =async (req, res) => {
+const userForgetPassword = async (req, res) => {
   const { email } = req.body;
-  
+
   const user = await userTbl.findOne({ email });
   if (!user) {
-    return res.status(404).json({ success: false, message: "Email is not Exist" });
+    return res
+      .status(404)
+      .json({ success: false, message: "Email is not Exist" });
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString(); 
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
   user.otp = otp;
   user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
   await user.save();
@@ -194,97 +239,171 @@ const userForgetPassword =async (req, res) => {
   res.json({ success: true, message: "OTP sending successfully !" });
 };
 
-const userVerifyPassword=async (req, res) => {
+const userVerifyPassword = async (req, res) => {
   const { email, otp } = req.body;
 
   const user = await userTbl.findOne({ email });
 
   if (!user || user.otp !== otp || user.otpExpires < new Date()) {
-    return res.status(400).json({ success: false, message: "OTP is wrong or OTP is expired !" });
+    return res
+      .status(400)
+      .json({ success: false, message: "OTP is wrong or OTP is expired !" });
   }
 
   res.json({ success: true, message: "OTP is right,Enter New Passsword" });
-}
+};
 
-const userResetPassword=async (req, res) => {
+const userResetPassword = async (req, res) => {
   const { email, newPassword, otp } = req.body;
 
   const user = await userTbl.findOne({ email });
 
   if (!user || user.otp !== otp || user.otpExpires < new Date()) {
-    return res.status(400).json({ success: false, message: "OTP is wrong or expired !" });
+    return res
+      .status(400)
+      .json({ success: false, message: "OTP is wrong or expired !" });
   }
 
-  user.passwordHash = await bcrypt.hash(newPassword, 10); 
-  user.otp = undefined;    
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  user.otp = undefined;
   user.otpExpires = undefined;
   await user.save();
 
   res.json({ success: true, message: "Password changed !" });
-}
+};
 const getAllUsers = async (req, res) => {
   if (req.user.role !== "admin") {
-    return res.json({ success: false, error: true, message: "Access denied", code: 403 });
+    return res.json({
+      success: false,
+      error: true,
+      message: "Access denied",
+      code: 403,
+    });
   }
   try {
-    const users = await userTbl.find({ role: "employee" })
+    const users = await userTbl
+      .find({ role: "employee" })
       .select("-passwordHash")
       .populate("departmentId", "name")
       .populate("designationId", "name")
       .populate("shiftId", "name");
 
-    res.json({ success: true, error: false, message: "Users fetched", code: 200, data: users });
+    res.json({
+      success: true,
+      error: false,
+      message: "Users fetched",
+      code: 200,
+      data: users,
+    });
   } catch (err) {
-    res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
+    res.json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+      code: 500,
+    });
   }
 };
 
-
 const getUserById = async (req, res) => {
   if (req.user.role !== "admin") {
-    return res.json({ success: false, error: true, message: "Access denied", code: 403 });
+    return res.json({
+      success: false,
+      error: true,
+      message: "Access denied",
+      code: 403,
+    });
   }
   try {
-    const user = await userTbl.findById(req.params.id)
+    const user = await userTbl
+      .findById(req.params.id)
       .select("-passwordHash")
       .populate("departmentId", "name")
       .populate("designationId", "name")
       .populate("shiftId", "name");
     if (!user) {
-      return res.json({ success: false, error: true, message: "Not found", code: 404 });
+      return res.json({
+        success: false,
+        error: true,
+        message: "Not found",
+        code: 404,
+      });
     }
-    res.json({ success: true, error: false, message: "User found", code: 200, data: user });
-  } catch  {
-    res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
+    res.json({
+      success: true,
+      error: false,
+      message: "User found",
+      code: 200,
+      data: user,
+    });
+  } catch {
+    res.json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+      code: 500,
+    });
   }
 };
 
-// 🔹 Update Employee
 const updateUser = async (req, res) => {
   if (req.user.role !== "admin") {
-    return res.json({ success: false, error: true, message: "Access denied", code: 403 });
+    return res.json({
+      success: false,
+      error: true,
+      message: "Access denied",
+      code: 403,
+    });
   }
   try {
-    const updated = await userTbl.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.json({ success: false, error: true, message: "User not found", code: 404 });
-    res.json({ success: true, error: false, message: "Updated", code: 200, data: updated });
-  } catch  {
-    res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
+    const updated = await userTbl.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!updated)
+      return res.json({
+        success: false,
+        error: true,
+        message: "User not found",
+        code: 404,
+      });
+    res.json({
+      success: true,
+      error: false,
+      message: "Updated",
+      code: 200,
+      data: updated,
+    });
+  } catch {
+    res.json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+      code: 500,
+    });
   }
 };
 
 const deleteUser = async (req, res) => {
   if (req.user.role !== "admin") {
-    return res.json({ success: false, error: true, message: "Access denied", code: 403 });
+    return res.json({
+      success: false,
+      error: true,
+      message: "Access denied",
+      code: 403,
+    });
   }
 
   try {
     const user = await userTbl.findById(req.params.id);
     if (!user) {
-      return res.json({ success: false, error: true, message: "User not found", code: 404 });
+      return res.json({
+        success: false,
+        error: true,
+        message: "User not found",
+        code: 404,
+      });
     }
 
-    // 🧹 Delete profile image from server
     if (user.profilePic) {
       const imagePath = path.join(__dirname, "..", "uploads", user.profilePic);
       if (fs.existsSync(imagePath)) {
@@ -296,7 +415,12 @@ const deleteUser = async (req, res) => {
 
     res.json({ success: true, error: false, message: "Deleted", code: 200 });
   } catch {
-    res.json({ success: false, error: true, message: "Internal Server Error", code: 500 });
+    res.json({
+      success: false,
+      error: true,
+      message: "Internal Server Error",
+      code: 500,
+    });
   }
 };
 
@@ -305,12 +429,12 @@ const getBirthdaysAndAnniversaries = async (req, res) => {
     const users = await userTbl.find({ role: "employee", status: "active" });
 
     const today = new Date();
-    const todayMonthDay = `${today.getMonth() + 1}-${today.getDate()}`; // "MM-DD"
+    const todayMonthDay = `${today.getMonth() + 1}-${today.getDate()}`;
 
     const birthdays = [];
     const anniversaries = [];
 
-    users.forEach(user => {
+    users.forEach((user) => {
       const dob = new Date(user.dob);
       const doj = new Date(user.doj);
 
@@ -331,26 +455,21 @@ const getBirthdaysAndAnniversaries = async (req, res) => {
       code: 200,
       data: {
         birthdays,
-        anniversaries
-      }
+        anniversaries,
+      },
     });
   } catch (err) {
     res.status(500).json({
       success: false,
       message: "Internal server error",
-      code: 500
+      code: 500,
     });
   }
 };
 
-// 👇 Controllers/UserController.js ke andar
-
 const getAllEmployeeDates = async (req, res) => {
   try {
-    const employees = await userTbl.find(
-      { role: "employee" },
-      "name dob doj" // 👈 Sirf ye fields chahiye
-    );
+    const employees = await userTbl.find({ role: "employee" }, "name dob doj");
 
     res.json({
       success: true,
@@ -368,7 +487,6 @@ const getAllEmployeeDates = async (req, res) => {
   }
 };
 
-
 module.exports = {
   register,
   login,
@@ -383,5 +501,5 @@ module.exports = {
   approvePendingUser,
   rejectPendingUser,
   getBirthdaysAndAnniversaries,
-  getAllEmployeeDates
+  getAllEmployeeDates,
 };

@@ -6,7 +6,7 @@ const {
   getJobs,
   getJobById,
   updateJob,
-  deleteJob
+  deleteJob,
 } = require("../Controllers/jobController");
 
 router.post("/", addJob);

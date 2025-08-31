@@ -7,7 +7,7 @@ const {
   updateLeaveStatus,
   deleteLeave,
   getLeavesByEmployee,
-  getLeaveReport
+  getLeaveReport,
 } = require("../Controllers/LeaveController");
 const authMiddleware = require("../Middleware/auth");
 
@@ -15,7 +15,7 @@ router.post("/", createLeave);
 
 router.get("/", getAllLeaves);
 
-router.get("/employee/:id",authMiddleware, getLeavesByEmployee);
+router.get("/employee/:id", authMiddleware, getLeavesByEmployee);
 
 router.get("/report", authMiddleware, getLeaveReport);
 
