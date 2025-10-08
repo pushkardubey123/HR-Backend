@@ -33,12 +33,7 @@ const birthdayAndAnniversaryCheck = async () => {
       }
     }
   } catch (err) {
-    res.json({
-      success: false,
-      error: true,
-      message: "Birthday/Anniversary Error:",
-      code: 500,
-    });
+    console.error(err)
   }
 };
 

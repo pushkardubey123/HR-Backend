@@ -3,14 +3,14 @@ const { getDistance } = require("geolib");
 const moment = require("moment");
 
 const officeLocation = {
-  latitude: 26.889,
-  longitude: 80.991,
+  latitude: 26.88925,
+  longitude: 80.99116,
 };
 
 const getCurrentTime = () => {
   const now = new Date();
   const hh = now.getHours().toString().padStart(2, "0");
-  const mm = now.getMinutes().toString().padStart(2, "0");
+  const mm = now.getMinutes().toString().padStart(2, "0"); 
   return `${hh}:${mm}`;
 };
 

@@ -144,6 +144,7 @@ const approvePendingUser = async (req, res) => {
 
     res.json({ success: true, message: "User approved and moved to main DB" });
   } catch (err) {
+    console.error(err)
     res.status(500).json({ success: false, message: "Error approving user" });
   }
 };
@@ -179,7 +180,7 @@ const login = async (req, res) => {
       return res.json({
         success: false,
         error: true,
-        message: "Invalid credentials",
+        message: "password wrong!",
         code: 400,
       });
     }
