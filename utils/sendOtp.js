@@ -1,29 +1,28 @@
 const nodemailer = require("nodemailer");
 
 const sendOTP = async (email, otp) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465, 
-      secure: true,
-      auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS, 
-      },
-    });
+  console.log("Trying to send OTP to:", email); // debug
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
 
-    await transporter.sendMail({
+  try {
+    const result = await transporter.sendMail({
       from: `"HRMS App" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "Password Reset OTP",
-      html: `<h3>Your OTP is: <b>${otp}</b></h3><p>This OTP will expire in 10 minutes.</p>`,
+      subject: "Password reset OTP",
+      html: `<h3>Your OTP is: <b>${otp}</b></h3><p>It expires in 10 minutes.</p>`,
     });
-
-    console.log("OTP Email sent successfully");
-  } catch (err) {
-    console.error("Error sending OTP email", err);
-    throw new Error("Failed to send OTP email");
+    console.log("OTP sent:", result.response);
+  } catch (error) {
+    console.error("OTP send failed:", error.message);
+    throw new Error("Email send failed");
   }
 };
+
 
 module.exports = sendOTP;
