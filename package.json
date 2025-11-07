@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon node index.js",
+    "dev": "node --max-old-space-size=2048 node_modules/nodemon/bin/nodemon.js index.js",
     "start": "node index.js",
     "build": "vite build"
   },
@@ -23,6 +23,7 @@
     "googleapis": "^154.1.0",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
+    "moment-timezone": "^0.6.0",
     "mongoose": "^8.14.2",
     "multer": "^2.0.2",
     "node-cron": "^4.1.1",
