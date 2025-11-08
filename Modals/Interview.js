@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const interviewSchema = new mongoose.Schema(
   {
+    companyId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User", 
+          default: null,
+        },
     applicationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Application",

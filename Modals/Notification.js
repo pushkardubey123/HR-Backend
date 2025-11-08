@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const notificationSchema = new mongoose.Schema({
+  companyId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", 
+        default: null,
+      },
   title: { type: String, required: true },
   message: { type: String, required: true },
   recipient: {

@@ -53,6 +53,7 @@ app.use("/api/timesheet", timesheetRoutes);
 app.use("/api/events", require("./Router/eventRoutes"));
 app.use("/api/meeting", require("./Router/meetingRoutes"));
 app.use("/api/jobs", require("./Router/jobRoutes"));
+app.use("/api/subscription", require("./Router/subscription"));
 require("./utils/taskDeadlineNotifier")();
 require("./utils/birthdayAnniversaryNotifier")();
 

@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const DesignationSchema = new mongoose.Schema(
   {
+    companyId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User", 
+          default: null,
+        },
     name: { type: String, required: true },
     departmentId: {
       type: mongoose.Schema.Types.ObjectId,

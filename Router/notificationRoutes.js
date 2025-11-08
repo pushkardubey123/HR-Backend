@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const verifyToken = require("../Middleware/auth");
+const companyMiddleware = require("../Middleware/companyMiddleware"); 
 const {
   getMyNotifications,
   markAsRead,
@@ -11,17 +12,24 @@ const {
   getEmployeeNotifications,
   clearBellNotifications,
 } = require("../Controllers/notificationController");
+const subscriptionMiddleware = require("../Middleware/subscriptionMiddleware");
+const moduleAccess = require("../Middleware/moduleAccess");
 
-router.get("/", verifyToken, getMyNotifications);
+// All routes will have auth + companyId attached
+router.use(verifyToken, companyMiddleware,subscriptionMiddleware,moduleAccess("notification"));
 
-router.put("/:id/read", verifyToken, markAsRead);
+// Employee notifications
+router.get("/", getMyNotifications);
+router.get("/employee/:employeeId", getEmployeeNotifications);
 
-router.put("/clear-bell", verifyToken, clearBellNotifications);
-router.get("/employee/:employeeId", verifyToken, getEmployeeNotifications);
-
-router.get("/admin-alerts", verifyToken, getAdminAlerts);
-router.post("/send", sendCustomNotification);
+// Admin alerts
+router.get("/admin-alerts", getAdminAlerts);
 router.get("/all", getAllNotification);
-router.delete("/:id", verifyToken, deleteNotification);
+
+// Notification actions
+router.post("/send", sendCustomNotification);
+router.put("/:id/read", markAsRead);
+router.put("/clear-bell", clearBellNotifications);
+router.delete("/:id", deleteNotification);
 
 module.exports = router;

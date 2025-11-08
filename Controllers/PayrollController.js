@@ -1,6 +1,7 @@
 const Payroll = require("../Modals/Payroll");
 const User = require("../Modals/User");
 
+// ✅ Create Payroll
 const createPayroll = async (req, res) => {
   try {
     const {
@@ -19,13 +20,16 @@ const createPayroll = async (req, res) => {
         message: "Employee and Month are required",
       });
     }
+
+    const companyId = req.companyId; // ✅ company context
+
     let finalBasicSalary = basicSalary;
     if (!finalBasicSalary) {
-      const employee = await User.findById(employeeId);
+      const employee = await User.findOne({ _id: employeeId, companyId });
       if (!employee) {
         return res.status(404).json({
           success: false,
-          message: "Employee not found",
+          message: "Employee not found in this company",
         });
       }
       finalBasicSalary = employee.basicSalary || 0;
@@ -50,6 +54,7 @@ const createPayroll = async (req, res) => {
       workingDays,
       paidDays,
       netSalary,
+      companyId, // ✅ added company ownership
       generatedBy: req.user.id,
     });
 
@@ -69,9 +74,12 @@ const createPayroll = async (req, res) => {
   }
 };
 
+// ✅ Get All Payrolls (company-based)
 const getAllPayrolls = async (req, res) => {
   try {
-    const payrolls = await Payroll.find()
+    const companyId = req.companyId;
+
+    const payrolls = await Payroll.find({ companyId })
       .populate({
         path: "employeeId",
         select: "name email pan bankAccount departmentId designationId",
@@ -87,7 +95,8 @@ const getAllPayrolls = async (req, res) => {
       message: "Payrolls fetched successfully",
       data: payrolls,
     });
-  } catch {
+  } catch (err) {
+    console.error("Get Payrolls Error:", err);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -95,12 +104,14 @@ const getAllPayrolls = async (req, res) => {
   }
 };
 
+// ✅ Get Payroll by ID (within same company)
 const getPayrollById = async (req, res) => {
   try {
-    const payroll = await Payroll.findById(req.params.id).populate(
-      "employeeId",
-      "name email"
-    );
+    const companyId = req.companyId;
+    const payroll = await Payroll.findOne({
+      _id: req.params.id,
+      companyId,
+    }).populate("employeeId", "name email");
 
     if (!payroll) {
       return res.status(404).json({
@@ -114,7 +125,8 @@ const getPayrollById = async (req, res) => {
       message: "Payroll fetched successfully",
       data: payroll,
     });
-  } catch {
+  } catch (err) {
+    console.error("Get Payroll By ID Error:", err);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -122,11 +134,13 @@ const getPayrollById = async (req, res) => {
   }
 };
 
+// ✅ Get Payrolls by Employee ID (within same company)
 const getPayrollByEmployeeId = async (req, res) => {
   try {
+    const companyId = req.companyId;
     const employeeId = req.params.id;
 
-    const payrolls = await Payroll.find({ employeeId }).populate(
+    const payrolls = await Payroll.find({ employeeId, companyId }).populate(
       "employeeId",
       "name email phone"
     );
@@ -136,16 +150,19 @@ const getPayrollByEmployeeId = async (req, res) => {
       message: "Payrolls fetched for employee",
       data: payrolls,
     });
-  } catch {
+  } catch (err) {
+    console.error("Get Payroll by Employee Error:", err);
     res.status(500).json({
       success: false,
-      message: "Internal server error",
+      message: "Internal Server Error",
     });
   }
 };
 
+// ✅ Update Payroll (only within same company)
 const updatePayroll = async (req, res) => {
   try {
+    const companyId = req.companyId;
     const {
       employeeId,
       month,
@@ -166,8 +183,8 @@ const updatePayroll = async (req, res) => {
     );
     const netSalary = basicSalary + totalAllowances - totalDeductions;
 
-    const updated = await Payroll.findByIdAndUpdate(
-      req.params.id,
+    const updated = await Payroll.findOneAndUpdate(
+      { _id: req.params.id, companyId },
       {
         employeeId,
         month,
@@ -193,7 +210,8 @@ const updatePayroll = async (req, res) => {
       message: "Payroll updated successfully",
       data: updated,
     });
-  } catch {
+  } catch (err) {
+    console.error("Update Payroll Error:", err);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -201,9 +219,15 @@ const updatePayroll = async (req, res) => {
   }
 };
 
+// ✅ Delete Payroll (only within same company)
 const deletePayroll = async (req, res) => {
   try {
-    const deleted = await Payroll.findByIdAndDelete(req.params.id);
+    const companyId = req.companyId;
+
+    const deleted = await Payroll.findOneAndDelete({
+      _id: req.params.id,
+      companyId,
+    });
 
     if (!deleted) {
       return res.status(404).json({
@@ -216,7 +240,8 @@ const deletePayroll = async (req, res) => {
       success: true,
       message: "Payroll deleted successfully",
     });
-  } catch {
+  } catch (err) {
+    console.error("Delete Payroll Error:", err);
     res.status(500).json({
       success: false,
       message: "Internal Server Error",

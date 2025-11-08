@@ -18,6 +18,7 @@ const streamReportDirectly = (res, type, data) => {
     .fontSize(20)
     .text(`${type.toUpperCase()} REPORT`, { align: "center" })
     .moveDown();
+
   const headingsMap = {
     attendance: ["#", "Name", "Email", "Date", "Status"],
     leaves: ["#", "Name", "Email", "Leave Type", "Start", "End", "Status"],
@@ -28,7 +29,6 @@ const streamReportDirectly = (res, type, data) => {
 
   const headers = headingsMap[type] || [];
   doc.fontSize(12).font("Helvetica-Bold").text(headers.join(" | ")).moveDown();
-
   doc.font("Helvetica").fontSize(10);
 
   data.forEach((item, i) => {
@@ -53,13 +53,12 @@ const streamReportDirectly = (res, type, data) => {
 const generateDynamicReport = async (req, res) => {
   try {
     const { type } = req.query;
+    const companyId = req.companyId; // ✅ Added company context
     let data = [];
 
     if (type === "attendance") {
-      const attendance = await Attendance.find().populate(
-        "employeeId",
-        "name email"
-      );
+      const attendance = await Attendance.find({ companyId }) // ✅ Filter by company
+        .populate("employeeId", "name email");
       data = attendance.map((a) => ({
         name: a.employeeId?.name || "-",
         email: a.employeeId?.email || "-",
@@ -67,7 +66,7 @@ const generateDynamicReport = async (req, res) => {
         status: a.status,
       }));
     } else if (type === "leaves") {
-      const leaves = await Leave.find().populate("employeeId", "name email");
+      const leaves = await Leave.find({ companyId }).populate("employeeId", "name email");
       data = leaves.map((l) => ({
         name: l.employeeId?.name || "-",
         email: l.employeeId?.email || "-",
@@ -77,10 +76,7 @@ const generateDynamicReport = async (req, res) => {
         status: l.status,
       }));
     } else if (type === "users") {
-      const users = await User.find({ role: "employee" }).populate(
-        "departmentId",
-        "name"
-      );
+      const users = await User.find({ role: "employee", companyId }).populate("departmentId", "name");
       data = users.map((u) => ({
         name: u.name,
         email: u.email,
@@ -88,7 +84,7 @@ const generateDynamicReport = async (req, res) => {
         department: u.departmentId?.name || "-",
       }));
     } else if (type === "exit") {
-      const exits = await Exit.find().populate("employeeId", "name email");
+      const exits = await Exit.find({ companyId }).populate("employeeId", "name email");
       data = exits.map((e) => ({
         name: e.employeeId?.name || "-",
         email: e.employeeId?.email || "-",
@@ -97,7 +93,7 @@ const generateDynamicReport = async (req, res) => {
         status: e.clearanceStatus || "Pending",
       }));
     } else if (type === "projects") {
-      const projects = await Project.find();
+      const projects = await Project.find({ companyId });
       data = projects.map((p) => ({
         name: p.name,
         status: p.status,
@@ -106,20 +102,18 @@ const generateDynamicReport = async (req, res) => {
         tasks: p.tasks.length,
       }));
     } else {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid report type" });
+      return res.status(400).json({ success: false, message: "Invalid report type" });
     }
 
     streamReportDirectly(res, type, data);
-  } catch {
-    res.status(500).json({ success: false, message: "Server error" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error", error: err.message });
   }
 };
 
 const getReports = async (req, res) => {
   try {
-    const reports = await Report.find()
+    const reports = await Report.find({ companyId: req.companyId }) // ✅ Filter by company
       .populate("generatedBy", "name email")
       .sort({ generatedAt: -1 });
 
@@ -138,15 +132,14 @@ const getReports = async (req, res) => {
     }));
 
     res.json({ success: true, data: formattedReports });
-  } catch {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch reports" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to fetch reports", error: err.message });
   }
 };
 
 const getDashboardAnalytics = async (req, res) => {
   try {
+    const companyId = req.companyId; // ✅ Added company filter
     const [
       employeeCount,
       leaveCount,
@@ -155,17 +148,18 @@ const getDashboardAnalytics = async (req, res) => {
       todayAttendance,
       projectCount,
     ] = await Promise.all([
-      User.countDocuments({ role: "employee" }),
-      Leave.countDocuments(),
-      Attendance.countDocuments(),
-      Exit.countDocuments(),
+      User.countDocuments({ role: "employee", companyId }),
+      Leave.countDocuments({ companyId }),
+      Attendance.countDocuments({ companyId }),
+      Exit.countDocuments({ companyId }),
       Attendance.countDocuments({
+        companyId,
         date: {
           $gte: new Date(new Date().setHours(0, 0, 0, 0)),
           $lt: new Date(new Date().setHours(23, 59, 59, 999)),
         },
       }),
-      Project.countDocuments(),
+      Project.countDocuments({ companyId }),
     ]);
 
     res.json({
@@ -179,8 +173,8 @@ const getDashboardAnalytics = async (req, res) => {
         exitRequests: exitCount,
       },
     });
-  } catch {
-    res.status(500).json({ success: false, message: "Analytics error" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Analytics error", error: err.message });
   }
 };
 

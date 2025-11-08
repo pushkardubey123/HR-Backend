@@ -1,5 +1,6 @@
 const attendanceTbl = require("../Modals/Attendence");
 const mongoose = require("mongoose");
+
 const calculateDuration = (inTime, outTime) => {
   if (
     !inTime ||
@@ -20,10 +21,12 @@ const calculateDuration = (inTime, outTime) => {
   return diff > 0 ? diff : 0;
 };
 
+// ✅ Generate full timesheet report (with companyId filter)
 const getTimesheetReport = async (req, res) => {
   try {
     const { startDate, endDate, employee } = req.query;
-    const filter = {};
+    const companyId = req.companyId; // ✅ added
+    const filter = { companyId }; // ✅ company-based filter
 
     if (startDate && endDate) {
       filter.date = {
@@ -69,9 +72,11 @@ const getTimesheetReport = async (req, res) => {
   }
 };
 
+// ✅ Get timesheet of single employee (with companyId)
 const getEmployeeTimesheet = async (req, res) => {
   try {
     const { id } = req.params;
+    const companyId = req.companyId; // ✅ added
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -81,7 +86,7 @@ const getEmployeeTimesheet = async (req, res) => {
     }
 
     const records = await attendanceTbl
-      .find({ employeeId: id })
+      .find({ employeeId: id, companyId }) // ✅ company-based query
       .populate("employeeId", "name");
 
     res.json({

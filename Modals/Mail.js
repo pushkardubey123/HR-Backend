@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const mailSchema = new mongoose.Schema({
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   recipients: [{ type: String }],
   subject: String,

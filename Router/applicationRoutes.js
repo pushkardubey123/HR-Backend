@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const attachCompanyId = require("../Middleware/companyMiddleware");
+const auth = require("../Middleware/auth");
+
 const {
   applyJob,
   getApplications,
@@ -7,14 +10,15 @@ const {
   rejectApplication,
   shortlistApplication,
 } = require("../Controllers/applicationController");
-const auth = require("../Middleware/auth");
+
 
 router.post("/", applyJob);
 
-router.get("/", auth, getApplications);
-router.get("/:id", auth, getApplicationById);
+router.get("/", auth, attachCompanyId, getApplications);
+router.get("/:id", auth, attachCompanyId, getApplicationById);
 
-router.put("/:id/reject", auth, rejectApplication);
-router.put("/:id/shortlist", auth, shortlistApplication);
+// Admin actions (reject/shortlist) protected
+router.put("/:id/reject", auth, attachCompanyId, rejectApplication);
+router.put("/:id/shortlist", auth, attachCompanyId, shortlistApplication);
 
 module.exports = router;

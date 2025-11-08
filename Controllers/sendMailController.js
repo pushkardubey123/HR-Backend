@@ -4,9 +4,11 @@ const path = require("path");
 const fs = require("fs");
 const userTbl = require("../Modals/User");
 
+// -------------------- SEND MAIL --------------------
 const sendMail = async (req, res) => {
   try {
     const { to, subject, message } = req.body;
+    const companyId = req.companyId; // ✅ added company context
 
     const uploadDir = path.join(__dirname, "..", "uploads", "mails");
     if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
@@ -25,10 +27,10 @@ const sendMail = async (req, res) => {
     }
 
     const html = `
-  <div style="font-family: sans-serif;">
-    <p>${message}</p>
-  </div>
-`;
+      <div style="font-family: sans-serif;">
+        <p>${message}</p>
+      </div>
+    `;
 
     await sendEmail(to, subject, html, attachments, req.user.name);
 
@@ -38,6 +40,7 @@ const sendMail = async (req, res) => {
       subject,
       message,
       attachments: attachments.map((f) => f.filename),
+      companyId, // ✅ added company reference
     });
 
     res.json({ success: true, message: "Email sent successfully" });
@@ -47,9 +50,10 @@ const sendMail = async (req, res) => {
   }
 };
 
+// -------------------- USERS --------------------
 const getAllUsers = async (req, res) => {
   try {
-    const users = await userTbl.find({}, "email name role");
+    const users = await userTbl.find({ companyId: req.companyId }, "email name role"); // ✅ filter by company
     res.json({ data: users });
   } catch (err) {
     console.error("Fetch all users error:", err);
@@ -57,13 +61,12 @@ const getAllUsers = async (req, res) => {
   }
 };
 
+// -------------------- MOVE TO TRASH --------------------
 const moveToTrash = async (req, res) => {
   try {
-    const mail = await MailModel.findById(req.params.id);
+    const mail = await MailModel.findOne({ _id: req.params.id, companyId: req.companyId }); // ✅ company scope
     if (!mail)
-      return res
-        .status(404)
-        .json({ success: false, message: "Mail not found" });
+      return res.status(404).json({ success: false, message: "Mail not found" });
 
     if (!mail.trashedBy.includes(req.user.id)) {
       mail.trashedBy.push(req.user.id);
@@ -77,12 +80,14 @@ const moveToTrash = async (req, res) => {
   }
 };
 
+// -------------------- GET TRASHED MAILS --------------------
 const getTrashedMails = async (req, res) => {
   try {
     const userId = req.user.id;
     const userEmail = req.user.email;
 
     const mails = await MailModel.find({
+      companyId: req.companyId, // ✅ scoped to company
       trashedBy: userId,
       permanentlyDeletedBy: { $ne: userId },
       $or: [{ sender: userId }, { recipients: { $in: [userEmail] } }],
@@ -97,24 +102,17 @@ const getTrashedMails = async (req, res) => {
   }
 };
 
+// -------------------- RESTORE MAIL --------------------
 const restoreMail = async (req, res) => {
   try {
-    const mail = await MailModel.findById(req.params.id);
+    const mail = await MailModel.findOne({ _id: req.params.id, companyId: req.companyId }); // ✅
     if (!mail)
-      return res
-        .status(404)
-        .json({ success: false, message: "Mail not found" });
+      return res.status(404).json({ success: false, message: "Mail not found" });
 
-    const before = mail.trashedBy.map((id) => id.toString());
     mail.trashedBy = mail.trashedBy.filter(
       (id) => id.toString() !== req.user.id.toString()
     );
-
     await mail.save();
-
-    const after = mail.trashedBy.map((id) => id.toString());
-
-    console.log("RESTORE DEBUG:", { before, after, current: req.user.id });
 
     res.json({ success: true, message: "Mail restored" });
   } catch (err) {
@@ -123,13 +121,12 @@ const restoreMail = async (req, res) => {
   }
 };
 
+// -------------------- PERMANENT DELETE --------------------
 const deleteMailPermanently = async (req, res) => {
   try {
-    const mail = await MailModel.findById(req.params.id);
+    const mail = await MailModel.findOne({ _id: req.params.id, companyId: req.companyId }); // ✅
     if (!mail)
-      return res
-        .status(404)
-        .json({ success: false, message: "Mail not found" });
+      return res.status(404).json({ success: false, message: "Mail not found" });
 
     if (!mail.permanentlyDeletedBy.includes(req.user.id)) {
       mail.permanentlyDeletedBy.push(req.user.id);
@@ -147,23 +144,21 @@ const deleteMailPermanently = async (req, res) => {
     });
   } catch (err) {
     console.error("Permanent delete error:", err);
-    res
-      .status(500)
-      .json({ success: false, message: "Permanent delete failed" });
+    res.status(500).json({ success: false, message: "Permanent delete failed" });
   }
 };
 
+// -------------------- ADMIN ALL MAILS --------------------
 const getAllMails = async (req, res) => {
   try {
     if (req.user.role !== "admin") {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    const adminId = req.user.id;
-
     const mails = await MailModel.find({
-      trashedBy: { $ne: adminId },
-      permanentlyDeletedBy: { $ne: adminId },
+      companyId: req.companyId, // ✅
+      trashedBy: { $ne: req.user.id },
+      permanentlyDeletedBy: { $ne: req.user.id },
     })
       .populate("sender", "name email")
       .sort({ createdAt: -1 });
@@ -175,12 +170,14 @@ const getAllMails = async (req, res) => {
   }
 };
 
+// -------------------- MY MAILS --------------------
 const getMyMails = async (req, res) => {
   try {
     const userId = req.user.id;
     const userEmail = req.user.email;
 
     const mails = await MailModel.find({
+      companyId: req.companyId, // ✅
       trashedBy: { $ne: userId },
       permanentlyDeletedBy: { $ne: userId },
       $or: [{ sender: userId }, { recipients: { $in: [userEmail] } }],
@@ -194,6 +191,7 @@ const getMyMails = async (req, res) => {
   }
 };
 
+// -------------------- DOWNLOAD ATTACHMENT --------------------
 const downloadAttachment = (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, "..", "uploads", "mails", filename);
@@ -205,6 +203,7 @@ const downloadAttachment = (req, res) => {
   res.download(filePath, filename);
 };
 
+// -------------------- EXPORT --------------------
 module.exports = {
   sendMail,
   getAllMails,

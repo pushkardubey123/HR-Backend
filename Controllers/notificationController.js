@@ -6,13 +6,15 @@ const Leave = require("../Modals/Leave");
 const Exit = require("../Modals/ExitRequest");
 const mongoose = require("mongoose");
 
+// Admin alerts
 exports.getAdminAlerts = async (req, res) => {
   try {
-    const pendingEmployees = await pendingEmployee.countDocuments();
-    const pendingLeaves = await Leave.countDocuments({ status: "Pending" });
-    const pendingExits = await Exit.countDocuments({
-      clearanceStatus: "pending",
-    });
+    const companyId = req.companyId;
+
+    const pendingEmployees = await pendingEmployee.countDocuments({ companyId });
+    const pendingLeaves = await Leave.countDocuments({ status: "Pending", companyId });
+    const pendingExits = await Exit.countDocuments({ clearanceStatus: "pending", companyId });
+
     res.json({
       success: true,
       data: [
@@ -22,15 +24,15 @@ exports.getAdminAlerts = async (req, res) => {
       ],
     });
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch admin alerts" });
+    res.status(500).json({ success: false, message: "Failed to fetch admin alerts" });
   }
 };
 
+// Employee notifications
 exports.getEmployeeNotifications = async (req, res) => {
   try {
     const { employeeId } = req.params;
+    const companyId = req.companyId;
 
     if (!mongoose.Types.ObjectId.isValid(employeeId)) {
       return res.status(400).json({ message: "Invalid employee ID" });
@@ -38,7 +40,9 @@ exports.getEmployeeNotifications = async (req, res) => {
 
     const notifications = await Notification.find({
       recipient: employeeId,
+      companyId,
     }).sort({ createdAt: -1 });
+
     res.status(200).json(notifications);
   } catch (error) {
     console.error("Fetch Notifications Error:", error);
@@ -46,39 +50,40 @@ exports.getEmployeeNotifications = async (req, res) => {
   }
 };
 
+// Get all notifications (Admin)
 exports.getAllNotification = async (req, res) => {
   try {
-    const allNotifications = await Notification.find()
+    const companyId = req.companyId;
+
+    const allNotifications = await Notification.find({ companyId })
       .populate("recipient", "name")
       .sort({ createdAt: -1 });
+
     res.status(200).json(allNotifications);
   } catch (err) {
     res.status(500).json({ message: "Server Error" });
   }
 };
 
+// Send custom notification
 exports.sendCustomNotification = async (req, res) => {
   try {
+    const companyId = req.companyId;
     const { title, message, recipient, type } = req.body;
 
     let imageUrl = "";
-
     if (req.files && req.files.image) {
       const imageFile = req.files.image;
       const fileName = `${Date.now()}_${imageFile.name}`;
       const savePath = `./uploads/notifications/${fileName}`;
-
       await imageFile.mv(savePath);
       imageUrl = `notifications/${fileName}`;
     }
 
     if (recipient === "all") {
-      const allEmployees = await User.find({ role: "employee" }, "_id");
-
+      const allEmployees = await User.find({ role: "employee", companyId }, "_id");
       if (!allEmployees.length) {
-        return res
-          .status(404)
-          .json({ success: false, message: "No employees found" });
+        return res.status(404).json({ success: false, message: "No employees found" });
       }
 
       const notifications = allEmployees.map((emp) => ({
@@ -87,6 +92,7 @@ exports.sendCustomNotification = async (req, res) => {
         recipient: emp._id,
         type: type || "custom",
         image: imageUrl || null,
+        companyId,
         createdAt: new Date(),
       }));
 
@@ -104,6 +110,7 @@ exports.sendCustomNotification = async (req, res) => {
       recipient,
       type: type || "custom",
       image: imageUrl || null,
+      companyId,
       createdAt: new Date(),
     });
 
@@ -116,43 +123,53 @@ exports.sendCustomNotification = async (req, res) => {
     });
   } catch (err) {
     console.error("Send Notification Error:", err);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to send notification" });
+    return res.status(500).json({ success: false, message: "Failed to send notification" });
   }
 };
 
+// My notifications
 exports.getMyNotifications = async (req, res) => {
   try {
+    const companyId = req.companyId;
+
     const notifs = await Notification.find({
       recipient: req.user.id,
       removedFromBell: false,
+      companyId,
     }).sort({ createdAt: -1 });
+
     res.json({ success: true, data: notifs });
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch notifications" });
+    res.status(500).json({ success: false, message: "Failed to fetch notifications" });
   }
 };
 
+// Mark as read
 exports.markAsRead = async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { read: true });
+    const companyId = req.companyId;
+
+    await Notification.findOneAndUpdate(
+      { _id: req.params.id, companyId },
+      { read: true }
+    );
+
     res.json({ success: true, message: "Marked as read" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to update notification" });
+    res.status(500).json({ success: false, message: "Failed to update notification" });
   }
 };
 
+// Clear bell notifications
 exports.clearBellNotifications = async (req, res) => {
   try {
+    const companyId = req.companyId;
+
     await Notification.updateMany(
-      { recipient: req.user.id },
+      { recipient: req.user.id, companyId },
       { $set: { removedFromBell: true } }
     );
+
     res.json({ success: true, message: "Cleared from bell" });
   } catch (err) {
     console.error(err);
@@ -160,16 +177,19 @@ exports.clearBellNotifications = async (req, res) => {
   }
 };
 
+// Delete notification
 exports.deleteNotification = async (req, res) => {
   try {
+    const companyId = req.companyId;
+
     await Notification.findOneAndDelete({
       _id: req.params.id,
       recipient: req.user.id,
+      companyId,
     });
+
     res.json({ success: true, message: "Notification deleted" });
   } catch (err) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to delete notification" });
+    res.status(500).json({ success: false, message: "Failed to delete notification" });
   }
 };

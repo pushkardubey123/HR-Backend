@@ -31,6 +31,11 @@ const TaskSchema = new mongoose.Schema({
 });
 
 const ProjectSchema = new mongoose.Schema({
+   companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   name: { type: String, required: true },
   description: String,
   startDate: Date,

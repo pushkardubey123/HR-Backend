@@ -1,50 +1,27 @@
 const jwt = require("jsonwebtoken");
-const User = require("../Modals/User");
+const userTbl = require("../Modals/User");
 
-const authMiddleware = async (req, res, next) => {
-  const rawHeader = req.header("Authorization");
-  const token = rawHeader?.split(" ")[1];
-
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: true,
-      message: "Access denied. Token missing.",
-      code: 401,
-    });
-  }
-
+module.exports = async (req, res, next) => {
   try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token)
+      return res.status(401).json({ success: false, message: "No token provided" });
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // ✅ this must include companyId from JWT
 
-    // ✅ Get full user details
-    const user = await User.findById(decoded.id).select("name email role");
+    // (Optional: fetch user details)
+    const dbUser = await userTbl.findById(decoded.id);
+    if (!dbUser)
+      return res.status(404).json({ success: false, message: "User not found" });
 
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        error: true,
-        message: "Invalid token. User not found.",
-        code: 401,
-      });
-    }
-
-    req.user = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
-
+    req.user.role = dbUser.role;
+    req.user.email = dbUser.email;
+    req.user.name = dbUser.name;
+    req.user.companyId = dbUser.companyId || decoded.companyId; // ✅ ensures it exists
     next();
-  } catch {
-    res.status(401).json({
-      success: false,
-      error: true,
-      message: "Invalid token",
-      code: 401,
-    });
+  } catch (err) {
+    console.error("Auth middleware error:", err);
+    res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 };
-
-module.exports = authMiddleware;

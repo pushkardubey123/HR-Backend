@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const auth = require("../Middleware/auth");
+const attachCompanyId = require("../Middleware/companyMiddleware");
+
 const {
   createLeave,
   getAllLeaves,
@@ -9,20 +12,30 @@ const {
   getLeavesByEmployee,
   getLeaveReport,
 } = require("../Controllers/LeaveController");
-const authMiddleware = require("../Middleware/auth");
+const subscriptionMiddleware = require("../Middleware/subscriptionMiddleware");
+const moduleAccess = require("../Middleware/moduleAccess");
 
-router.post("/", createLeave);
+// -------------------- Routes --------------------
 
-router.get("/", getAllLeaves);
+// Apply leave (employee)
+router.post("/", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  createLeave);
 
-router.get("/employee/:id", authMiddleware, getLeavesByEmployee);
+// Get all leaves (admin only)
+router.get("/", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  getAllLeaves);
 
-router.get("/report", authMiddleware, getLeaveReport);
+// Get leaves by employee
+router.get("/employee/:id", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  getLeavesByEmployee);
 
-router.get("/:id", getLeaveById);
+// Leave report (monthly/yearly)
+router.get("/report", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  getLeaveReport);
 
-router.put("/:id", updateLeaveStatus);
+// Get leave by ID
+router.get("/:id", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  getLeaveById);
 
-router.delete("/:id", deleteLeave);
+// Update leave status (admin only)
+router.put("/:id", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  updateLeaveStatus);
+
+// Delete leave (admin only)
+router.delete("/:id", auth, attachCompanyId,subscriptionMiddleware,moduleAccess("leaves"),  deleteLeave);
 
 module.exports = router;

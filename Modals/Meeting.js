@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const meetingSchema = new mongoose.Schema(
   {
+    companyId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User", 
+          default: null,
+        },
     title: { type: String, required: true },
     description: String,
     date: { type: Date, required: true },

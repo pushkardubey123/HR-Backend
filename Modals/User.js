@@ -2,7 +2,17 @@ const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
   {
-    role: { type: String, enum: ["admin", "employee"], required: true },
+    role: { type: String, enum: ["superadmin","admin","employee"], required: true },
+     companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+      default: null,
+    },
+    status: {
+  type: String,
+  enum: ["pending","approved","rejected","blocked","active","inactive"],
+  default: function(){ return this.role === 'admin' ? 'pending' : 'active' }
+},
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     phone: String,
@@ -14,11 +24,6 @@ const UserSchema = new mongoose.Schema(
     designationId: { type: mongoose.Schema.Types.ObjectId, ref: "Designation" },
     shiftId: { type: mongoose.Schema.Types.ObjectId, ref: "Shift" },
     doj: Date,
-    status: {
-      type: String,
-      enum: ["active", "inactive", "resigned"],
-      default: "active",
-    },
     documents: [String],
     profilePic: String,
     basicSalary: {
@@ -34,7 +39,10 @@ const UserSchema = new mongoose.Schema(
     },
     otp: String,
     otpExpires: Date,
+     companyName: { type: String },
+    hasUsedTrial: { type: Boolean, default: false },
   },
+
   { timestamps: true }
 );
 

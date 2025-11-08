@@ -4,20 +4,15 @@ const userTbl = require("../Modals/User");
 const nodemailer = require("nodemailer");
 const moment = require("moment");
 
+// ✅ Create Meeting (company-wise)
 exports.createMeeting = async (req, res) => {
   try {
-    const { title, description, date, startTime, endTime, participants } =
-      req.body;
-    const createdBy = req.user._id;
+    const { title, description, date, startTime, endTime, participants } = req.body;
+    const createdBy = req.user.id;
+    const companyId = req.user.id; // ✅ add companyId from logged-in user
 
-    const startDateTime = moment(
-      `${date} ${startTime}`,
-      "YYYY-MM-DD HH:mm"
-    ).toISOString();
-    const endDateTime = moment(
-      `${date} ${endTime}`,
-      "YYYY-MM-DD HH:mm"
-    ).toISOString();
+    const startDateTime = moment(`${date} ${startTime}`, "YYYY-MM-DD HH:mm").toISOString();
+    const endDateTime = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm").toISOString();
 
     const users = await userTbl.find({ _id: { $in: participants } });
 
@@ -28,9 +23,7 @@ exports.createMeeting = async (req, res) => {
       end: { dateTime: endDateTime, timeZone: "Asia/Kolkata" },
       attendees: users.map((user) => ({ email: user.email })),
       conferenceData: {
-        createRequest: {
-          requestId: `meet-${Date.now()}`,
-        },
+        createRequest: { requestId: `meet-${Date.now()}` },
       },
     };
 
@@ -49,10 +42,11 @@ exports.createMeeting = async (req, res) => {
       date,
       startTime,
       endTime,
-      createdBy: req.user.id,
+      createdBy,
       participants,
       googleMeetLink,
       calendarEventId,
+      companyId, // ✅ added
     });
 
     await meeting.save();
@@ -68,19 +62,18 @@ exports.createMeeting = async (req, res) => {
       );
     });
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Meeting created successfully",
-        meeting,
-      });
+    res.status(201).json({
+      success: true,
+      message: "Meeting created successfully",
+      meeting,
+    });
   } catch (error) {
     console.error("Error creating meeting:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
 
+// ✅ Send Email (same as before)
 const sendEmail = (to, title, description, start, end, meetLink) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -107,38 +100,44 @@ const sendEmail = (to, title, description, start, end, meetLink) => {
     `,
   };
 
-  transporter.sendMail(mailOptions, (err, info) => {
+  transporter.sendMail(mailOptions, (err) => {
     if (err) console.error("Email Error:", err);
   });
 };
 
+// ✅ Get All Meetings (company-specific)
 exports.getAllMeetings = async (req, res) => {
   try {
-    const meetings = await Meeting.find()
+    const companyId = req.user.id; // ✅ filter by companyId
+    const meetings = await Meeting.find({ companyId })
       .populate("createdBy", "name email")
       .populate("participants", "name email");
-    res.status(200).json(meetings);
+
+    res.status(200).json({
+      success: true,
+      message: "Meetings fetched successfully",
+      data: meetings,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching meetings", error });
+    res.status(500).json({ success: false, message: "Error fetching meetings", error });
   }
 };
 
+// ✅ Update Meeting (no logic change, just company scope)
 exports.updateMeeting = async (req, res) => {
   try {
-    const meeting = await Meeting.findById(req.params.id);
-    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+    const meeting = await Meeting.findOne({
+      _id: req.params.id,
+      companyId: req.user.id, // ✅ ensure company scope
+    });
 
-    const { title, description, date, startTime, endTime, participants } =
-      req.body;
+    if (!meeting)
+      return res.status(404).json({ message: "Meeting not found" });
 
-    const startDateTime = moment(
-      `${date} ${startTime}`,
-      "YYYY-MM-DD HH:mm"
-    ).toISOString();
-    const endDateTime = moment(
-      `${date} ${endTime}`,
-      "YYYY-MM-DD HH:mm"
-    ).toISOString();
+    const { title, description, date, startTime, endTime, participants } = req.body;
+
+    const startDateTime = moment(`${date} ${startTime}`, "YYYY-MM-DD HH:mm").toISOString();
+    const endDateTime = moment(`${date} ${endTime}`, "YYYY-MM-DD HH:mm").toISOString();
 
     if (meeting.calendarEventId) {
       await calendar.events.update({
@@ -154,26 +153,32 @@ exports.updateMeeting = async (req, res) => {
     }
 
     const updated = await Meeting.findByIdAndUpdate(
-      req.params.id,
+      meeting._id,
       { title, description, date, startTime, endTime, participants },
       { new: true }
     );
 
-    res
-      .status(200)
-      .json({ message: "Meeting updated in DB & Google Calendar", updated });
+    res.status(200).json({
+      success: true,
+      message: "Meeting updated in DB & Google Calendar",
+      data: updated,
+    });
   } catch (error) {
     console.error("Error updating meeting:", error);
-    res
-      .status(500)
-      .json({ message: "Error updating meeting", error: error.message });
+    res.status(500).json({ message: "Error updating meeting", error: error.message });
   }
 };
 
+// ✅ Delete Meeting (companyId check added)
 exports.deleteMeeting = async (req, res) => {
   try {
-    const meeting = await Meeting.findById(req.params.id);
-    if (!meeting) return res.status(404).json({ message: "Meeting not found" });
+    const meeting = await Meeting.findOne({
+      _id: req.params.id,
+      companyId: req.user.id,
+    });
+
+    if (!meeting)
+      return res.status(404).json({ message: "Meeting not found" });
 
     if (meeting.calendarEventId) {
       await calendar.events.delete({
@@ -182,15 +187,14 @@ exports.deleteMeeting = async (req, res) => {
       });
     }
 
-    await Meeting.findByIdAndDelete(req.params.id);
+    await Meeting.findByIdAndDelete(meeting._id);
 
-    res
-      .status(200)
-      .json({ message: "Meeting deleted from DB & Google Calendar" });
+    res.status(200).json({
+      success: true,
+      message: "Meeting deleted from DB & Google Calendar",
+    });
   } catch (error) {
     console.error("Error deleting meeting:", error);
-    res
-      .status(500)
-      .json({ message: "Error deleting meeting", error: error.message });
+    res.status(500).json({ message: "Error deleting meeting", error: error.message });
   }
 };

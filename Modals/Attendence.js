@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const attendanceSchema = new mongoose.Schema(
   {
+    companyId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User", 
+          default: null,
+        },
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
